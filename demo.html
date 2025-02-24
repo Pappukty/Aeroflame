@@ -1,0 +1,112 @@
+<?php
+include_once './includes/header.php';
+
+?>
+    <style>
+        body {
+            background-color: #f4f4f4;
+        }
+        .profile-card {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: 0.3s;
+        }
+        .profile-header {
+            position: relative;
+            background: linear-gradient(to right, #ff7300, #ffb347);
+            height: 220px;
+            text-align: center;
+            color: #fff;
+            padding-top: 50px;
+        }
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid #fff;
+            position: absolute;
+            bottom: -75px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .details-section {
+            padding: 20px;
+            margin-top: 70px;
+        }
+        .details-section h5 {
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 12px;
+        }
+        .details-section p {
+            margin-bottom: 8px;
+            color: #555;
+        }
+        .info-box {
+            background: #fff8f0;
+            border-left: 5px solid #ff7300;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .btn-custom {
+            background-color: #ff7300;
+            color: #fff;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn-custom:hover {
+            background-color: #d95e00;
+        }
+    </style>
+
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <h2>Michael Johnson</h2>
+                    <p><i class="fa fa-map-marker-alt"></i> Downtown & Suburban Areas</p>
+                    <img src="technician.jpg" alt="Technician Image" class="profile-img">
+                </div>
+                <div class="details-section">
+                    <h5><span class="badge bg-success">Available</span></h5>
+                    <h5>🔧 Personal Details</h5>
+                    <div class="info-box"><strong>Email:</strong> michael.johnson@example.com</div>
+                    <div class="info-box"><strong>Phone:</strong> +1 234 567 890</div>
+                    <div class="info-box"><strong>Date of Birth:</strong> 15 March 1985</div>
+                    <div class="info-box"><strong>Address:</strong> 45 Gasworks Street, New York, USA</div>
+                    <div class="info-box"><strong>Experience:</strong> 12 Years in Gas Pipeline Installation & Maintenance</div>
+
+                    <h5>⚡ Professional Details</h5>
+                    <div class="info-box"><strong>Skills:</strong> Gas Leak Detection, Pipeline Installation, Emergency Repairs</div>
+                    <div class="info-box"><strong>Service Areas:</strong> Industrial, Commercial, Residential</div>
+                    <div class="info-box"><strong>Certifications:</strong> OSHA Certified, Gas Safe Registered</div>
+                    <div class="info-box"><strong>Emergency Services:</strong> <span class="badge bg-danger">24/7 Available</span></div>
+                </div>
+
+                <div class="text-center pb-3">
+                    <a href="michael_resume.pdf" class="btn btn-success" target="_blank">
+                        <i class="fa fa-download"></i> Download Resume
+                    </a>
+                    <a href="edit_profile.html" class="btn btn-custom">
+                        <i class="fa fa-edit"></i> Edit Profile
+                    </a>
+                    <a href="technician_list.html" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php
+include_once './includes/footer.php';
+
+?>
