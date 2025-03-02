@@ -1,26 +1,68 @@
 <?php
 include_once './includes/header.php';
+if ($_REQUEST['country_id']) {
+    $country = $_REQUEST['country_id'];
+} else {
+    $country = "101";
+}
+if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
+    $del_id = intval($_POST['del_c']); // Sanitize input to avoid SQL injection
 
+    $query = "DELETE FROM `countries` WHERE `id` = ?";
+    $stmt = $DatabaseCo->dbLink->prepare($query);
+    $stmt->bind_param("i", $del_id);
+
+    if ($stmt->execute()) {
+        echo "<script>
+              
+                window.location.href = 'country.php';
+              </script>";
+    } else {
+        echo "<script>alert('Error deleting record: " . $stmt->error . "');</script>";
+    }
+
+    $stmt->close();
+    $DatabaseCo->dbLink->close();
+}
 ?>
 <style>
     #delete_form .modal-dialog .modal-content .modal-body p {
-    color: white !important;
-}
+        color: white !important;
+    }
 </style>
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">
         <div class="col-sm-8">
-            <h3 class="page-title">All Staff </h3>
+            <h3 class="page-title">All Country </h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
-                <li class="breadcrumb-item active">Listing of All Staff </li>
+                <li class="breadcrumb-item active">Listing of All State </li>
             </ul>
         </div>
         <div class="col-md-4" align="right">
-            <a class="btn btn-primary btn-rounded" href="staff_add.php">
-                <i class="mdi mdi-settings-outline mr-1"></i> Add New Staff
+            <a class="btn btn-primary btn-rounded" href="state_add.php">
+                <i class="mdi mdi-settings-outline mr-1"></i> Add New State
             </a>
+        </div>
+        <div class="dropdown">
+
+            <div class="form-group">
+                <label for="countryDropdown" class="fw-semi-bold">Select Country</label>
+                <select class="form-control" id="countryDropdown">
+                    <option value="">Select Country</option>
+                    <?php
+                    $select = "SELECT * FROM `countries` ORDER BY `id` ASC";
+                    $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
+                    if (mysqli_num_rows($SQL_STATEMENT) != 0) {
+                        while ($Row = mysqli_fetch_object($SQL_STATEMENT)) { ?>
+                            <option value="<?php echo htmlspecialchars($Row->id); ?>">
+                                <?php echo $Row->name; ?>
+                            </option>
+                    <?php }
+                    } ?>
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -36,11 +78,10 @@ include_once './includes/header.php';
                         <thead>
                             <tr>
                                 <th class="w-5">Sno</th>
-                                <th class="w-15">Staff Image</th>
-                                <th class="w-15">Staff ID</th>
-                                <th class="w-25">Name</th>
-                                <th class="w-20">Contact</th>
-                                <th class="w-25">Email</th>
+                                <th class="w-15">Name</th>
+                                <th class="w-15">Country Code</th>
+                                <th class="w-25">status</th>
+
 
 
                                 <!-- <th class="w-25">Status</th> -->
@@ -50,8 +91,7 @@ include_once './includes/header.php';
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            $select = "SELECT * FROM `staff` WHERE id != '0' ORDER BY id DESC";
+                            <?php $select = "SELECT * FROM `states` WHERE id !='0' AND country_id='$country' ORDER BY id  DESC";
                             $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
                             $num_rows = mysqli_num_rows($SQL_STATEMENT);
 
@@ -64,25 +104,17 @@ include_once './includes/header.php';
 
                                         <!-- Staff Image -->
                                         <td>
-                                            <?php if (!empty($Row->photo)) { ?>
-                                                <a href="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>" target="_blank">
-                                                    <img src="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>"
-                                                        class="rounded header-profile-user" width="60" height="60" alt="Staff Image">
-                                                </a>
-                                            <?php } ?>
+                                            <?php echo htmlspecialchars($Row->name); ?>
                                         </td>
 
                                         <!-- Employee ID -->
-                                        <td><?php echo htmlspecialchars($Row->staff_id); ?></td>
+                                        <td><?php echo htmlspecialchars($Row->country_id); ?></td>
 
                                         <!-- Staff Name -->
-                                        <td><?php echo htmlspecialchars($Row->name); ?></td>
+                                        <td><?php echo htmlspecialchars($Row->status); ?></td>
 
                                         <!-- Contact -->
-                                        <td><?php echo htmlspecialchars($Row->contact); ?></td>
 
-
-                                        <td><?php echo htmlspecialchars($Row->email); ?></td>
 
                                         <!-- Availability Status Button -->
 
@@ -93,7 +125,7 @@ include_once './includes/header.php';
                                                 <!-- Edit Button -->
                                                 <div class="mr-3">
                                                     <a class="btn btn-sm p-2 btn-primary text-white edit-board"
-                                                        href="Staff_add.php?id=<?php echo $Row->id; ?>">
+                                                        href="state_add.php?id=<?php echo $Row->id; ?>">
                                                         <i class="fa fa-pencil" style="font-size: 15px;"></i>
                                                     </a>
                                                 </div>
@@ -110,35 +142,7 @@ include_once './includes/header.php';
                                                     </a>
                                                 </div>
 
-                                                <!-- Status Toggle Dropdown -->
-                                                <div class="dropdown">
-                                                    <button class="btn btn-light btn-rounded dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                        <i class="mdi mdi-tune"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated">
-                                                        <?php if ($Row->availability_status == 'Active') { ?>
-                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="updateStatus('<?php echo $Row->id; ?>', 'Inactive')">
-                                                                Set as Inactive
-                                                            </a>
-                                                        <?php } elseif ($Row->availability_status == 'Inactive') { ?>
-                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="updateStatus('<?php echo $Row->id; ?>', 'Active')">
-                                                                Set as Active
-                                                            </a>
-                                                        <?php } ?>
 
-                                                        <div class="dropdown-divider"></div> <!-- Adds a separator between status change and profile view -->
-                                                        <a class="dropdown-item" href="staff_view.php?id=<?php echo $Row->id; ?>">
-                                                            View Profile
-                                                        </a>
-
-                                                        <div class="dropdown-divider"></div>
-                                                        <!-- <a class="dropdown-item" href="javascript:void(0);" onclick="showWorkSchedule('<?php echo $Row->id; ?>')">
-                                                            Work Schedule
-                                                        </a> -->
-
-
-                                                    </div>
-                                                </div>
 
                                             </div>
                                         </td>
@@ -167,17 +171,17 @@ include_once './includes/header.php';
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="header-title">Delete Staff </h5>
+                    <h5 class="header-title">Delete State </h5>
                     <button type="btn" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" align="center">
-                    <h5 class="text-center">Delete Staff Details ?</h5>
-                    <p>Are you sure you want to delete this Staff details? All data and attached deals will be lost.</p>
+                    <h5 class="text-center">Delete State Details ?</h5>
+                    <p>Are you sure you want to delete this State details? All data and attached deals will be lost.</p>
                 </div>
                 <div class="modal-footer">
-                    <input type="hidden" name="form_action" value="DeleteStaff" />
+                    <input type="hidden" name="form_action" value="DeleteState" />
                     <input type="hidden" name="delid" id="delid" value="" />
                     <button class="btn raised bg-primary text-white ml-2 mt-2" data-dismiss="modal">Cancel</button>
                     <button name="delete_now" type="submit" class="btn mt-2 btn-dash btn-danger raised has-icon" id="modalDelete" value="Delete">Delete</button>
@@ -186,39 +190,7 @@ include_once './includes/header.php';
         </div>
     </form>
 </div>
-<div class="modal fade" id="workScheduleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Staff's Work Schedule</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <label for="customerList">Assigned Customers:</label>
-                <select class="form-control" name="customer_name" id="customer_name">
-                    <option value="" disabled selected>Select Customer</option>
-                    <?php
-                    // Fetch data from the database
-                    $data = $DatabaseCo->dbLink->query("SELECT * FROM `resolve`");
 
-                    if ($data->num_rows > 0) { // Check if data exists
-                        while ($fetch_data = mysqli_fetch_assoc($data)) {
-                            echo "<option value='{$fetch_data['id']}'>{$fetch_data['customer_name']}</option>";
-                        }
-                    } else {
-                        echo "<option value='' disabled>No Customers Available</option>";
-                    }
-                    ?>
-                </select>
-
-                <button class="btn btn-primary mt-3" onclick="assignCustomer()">Assign</button>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 
 
@@ -441,5 +413,15 @@ include_once './includes/footer.php';
 
         table.buttons().container()
             .appendTo('#example2_wrapper .col-md-6:eq(0)');
+    });
+</script>
+<script>
+    $("#countryDropdown").on('change', function() {
+        const selectedValue = this.value;
+        console.log(selectedValue);
+        if (selectedValue) {
+            // Use correct string interpolation for the URL
+            window.location.href = `state.php?country_id=${selectedValue}`;
+        }
     });
 </script>

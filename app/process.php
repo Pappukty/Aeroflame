@@ -27,3 +27,17 @@ if($_REQUEST['form_action'] == 'DeleteStaff') {
     $did = $xssClean->clean_input($_REQUEST['delid']);
     $DatabaseCo->dbLink->query("DELETE FROM `staff` WHERE `id`='$did'");
 }
+if($_REQUEST['form_action'] == 'DeleteCountry') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `countries` WHERE `id`='$did'");
+}
+
+
+if($_REQUEST['form_action'] == 'DeleteState') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `states` WHERE `id`='$did'");
+}
+if($_REQUEST['form_action'] == 'DeleteCity') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `cities` WHERE `id`='$did'");
+}

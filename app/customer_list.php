@@ -6,7 +6,11 @@ include_once './includes/header.php';
 
 
 ?>
-
+<style>
+    #delete_form .modal-dialog .modal-content .modal-body p {
+    color: white !important;
+}
+</style>
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">

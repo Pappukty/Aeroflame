@@ -2,7 +2,11 @@
 include_once './includes/header.php';
 
 ?>
-
+<style>
+    #delete_form .modal-dialog .modal-content .modal-body p {
+        color: white !important;
+    }
+</style>
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">
@@ -26,64 +30,64 @@ include_once './includes/header.php';
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-            <div class="table-responsive">
+                <div class="table-responsive">
                     <table id="example2" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-                    <thead>
-                        <tr>
-                            <th class="w-5">Sno</th>
-                            <th class="w-15">Product Image</th>
-                            <th class="w-25">Product Name</th>
-                            <th class="w-20">Category</th>
-                            <th class="w-25">Sub-category</th>
-                            <th class="w-15">Stock Quantity</th>
-                            <th class="w-15">Purchase Price</th>
-                            <th class="w-25">Supplier Name</th>
-                            <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                            <th class="w-25">Action</th>
-                            <!-- <?php } ?> -->
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $select = "SELECT * FROM `products` WHERE id!='0' ORDER BY id DESC";
-                        $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
-                        $num_rows = mysqli_num_rows($SQL_STATEMENT);
-                        if ($num_rows != 0) {
-                            $i = 1;
-                            while ($Row = mysqli_fetch_object($SQL_STATEMENT)) {
-                        ?>
-                                <tr>
-                                    <td><?php echo $i;
-                                        $i++; ?></td>
-                                    <td>
-                                        <?php if ($Row->product_image != '') { ?>
-                                            <a href="../uploads/product/<?php echo $Row->product_image; ?>" target="_blank"><img src="../uploads/product/<?php echo $Row->product_image; ?>" class="rounded-circle header-profile-user" width="60" height="60px" alt="" data-demo-src="../uploads/product/<?php echo $Row->product_image; ?>"></a>
-                                        <?php } ?>
-                                    </td>
-                                    <td><?php echo $Row->product_name; ?></td>
-                                    <td><?php echo $Row->category; ?></td>
-                                    <td><?php echo $Row->subcategory; ?></td>
-                                    <td><?php echo $Row->stock_quantity; ?></td>
-                                    <td><?php echo $Row->purchase_price; ?></td>
+                        <thead>
+                            <tr>
+                                <th class="w-5">Sno</th>
+                                <th class="w-15">Product Image</th>
+                                <th class="w-25">Product Name</th>
+                                <th class="w-20">Category</th>
+                                <th class="w-25">Sub-category</th>
+                                <th class="w-15">Stock Quantity</th>
+                                <th class="w-15">Purchase Price</th>
+                                <th class="w-25">Supplier Name</th>
+                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+                                <th class="w-25">Action</th>
+                                <!-- <?php } ?> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $select = "SELECT * FROM `products` WHERE id!='0' ORDER BY id DESC";
+                            $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
+                            $num_rows = mysqli_num_rows($SQL_STATEMENT);
+                            if ($num_rows != 0) {
+                                $i = 1;
+                                while ($Row = mysqli_fetch_object($SQL_STATEMENT)) {
+                            ?>
+                                    <tr>
+                                        <td><?php echo $i;
+                                            $i++; ?></td>
+                                        <td>
+                                            <?php if ($Row->product_image != '') { ?>
+                                                <a href="../uploads/product/<?php echo $Row->product_image; ?>" target="_blank"><img src="../uploads/product/<?php echo $Row->product_image; ?>" class="rounded-circle header-profile-user" width="60" height="60px" alt="" data-demo-src="../uploads/product/<?php echo $Row->product_image; ?>"></a>
+                                            <?php } ?>
+                                        </td>
+                                        <td><?php echo $Row->product_name; ?></td>
+                                        <td><?php echo $Row->category; ?></td>
+                                        <td><?php echo $Row->subcategory; ?></td>
+                                        <td><?php echo $Row->stock_quantity; ?></td>
+                                        <td><?php echo $Row->purchase_price; ?></td>
 
-                                    <td><?php echo ucfirst($Row->supplier_name); ?> </td>
-                                    <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                                    <td>
-                                        <div class="d-flex align-items-center justify-content-between w-100">
-                                            <div class="d-flex align-items-center">
-                                                <!-- Edit button -->
-                                                <a class="btn btn-sm p-2 btn-primary text-white  edit-board alert-box-trigger waves-effect waves-light kill-drop" href="Inventory_add.php?id=<?php echo $Row->id; ?>">
-                                                    <i class="text-white fa fa-pencil" style="font-size: 15px;"></i>
-                                                </a>
-                                            </div>
+                                        <td><?php echo ucfirst($Row->supplier_name); ?> </td>
+                                        <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+                                        <td>
+                                            <div class="d-flex align-items-center justify-content-between w-100">
+                                                <div class="d-flex align-items-center">
+                                                    <!-- Edit button -->
+                                                    <a class="btn btn-sm p-2 btn-primary text-white  edit-board alert-box-trigger waves-effect waves-light kill-drop" href="Inventory_add.php?id=<?php echo $Row->id; ?>">
+                                                        <i class="text-white fa fa-pencil" style="font-size: 15px;"></i>
+                                                    </a>
+                                                </div>
 
-                                            <div class="d-flex align-items-center">
-                                                <!-- Delete button -->
-                                                <a class="btn btn-sm p-2 btn-danger delete-board alert-box-trigger waves-effect waves-light kill-drop text-white" data-modal="delete-board-alert" data-toggle="modal" data-target="#delete-board-alert" href="#0" data-id="<?php echo $Row->id; ?>" id="delete-board<?php echo $Row->id; ?>">
-                                                    <i class="fa fa-trash text-white" style="font-size: 15px;"></i>
-                                                </a>
-                                            </div>
+                                                <div class="d-flex align-items-center">
+                                                    <!-- Delete button -->
+                                                    <a class="btn btn-sm p-2 btn-danger delete-board alert-box-trigger waves-effect waves-light kill-drop text-white" data-modal="delete-board-alert" data-toggle="modal" data-target="#delete-board-alert" href="#0" data-id="<?php echo $Row->id; ?>" id="delete-board<?php echo $Row->id; ?>">
+                                                        <i class="fa fa-trash text-white" style="font-size: 15px;"></i>
+                                                    </a>
+                                                </div>
 
-                                            <!-- <div class="dropdown">
+                                                <!-- <div class="dropdown">
      
         <button class="btn btn-light btn-rounded dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <i class="mdi mdi-tune"></i>
@@ -95,24 +99,24 @@ include_once './includes/header.php';
             </a>
         </div>
     </div> -->
-                                        </div>
+                                            </div>
 
+                                        </td>
+
+                                        <!-- <?php } ?> -->
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr>
+                                    <td colspan="9">
+                                        <div align="center"><strong>No Records!</strong></div>
                                     </td>
-
-                                    <!-- <?php } ?> -->
                                 </tr>
-                            <?php }
-                        } else { ?>
-                            <tr>
-                                <td colspan="9">
-                                    <div align="center"><strong>No Records!</strong></div>
-                                </td>
-                            </tr>
-                        <?php } ?>
+                            <?php } ?>
 
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 

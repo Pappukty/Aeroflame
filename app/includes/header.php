@@ -83,6 +83,8 @@ if (($_SESSION['user_id']) == '') {
   <script src="assets/plugins/notifications/js/lobibox.min.js"></script>
   <script src="assets/plugins/notifications/js/notifications.min.js"></script>
   <script src="assets/plugins/notifications/js/notification-custom-script.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+
   <!-- Toastr CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
   <!-- Toastr JS -->
@@ -135,7 +137,17 @@ if (($_SESSION['user_id']) == '') {
             <li><a href="ticket_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Tickets </a></li>
           </ul>
         </li>
+        <li>
+          <a href="javaScript:void();" class="waves-effect">
+          <i class="bi bi-person-workspace gold-icon mr-2" style="font-size: 19px;"></i> <span>Assign Technician</span>
 
+
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="technician_assign.php"><i class="zmdi zmdi-dot-circle-alt"></i>Technician Assign</a></li>
+
+          </ul>
+        </li>
 
 
 
@@ -152,9 +164,9 @@ if (($_SESSION['user_id']) == '') {
           </ul>
         </li>
 
-        <li><a href="#">
+        <!-- <li><a href="#">
             <i class="zmdi zmdi-store gold-icon" style="font-size: 19px;"></i> Vendors
-          </a></li>
+          </a></li> -->
 
         <li>
           <a href="javaScript:void();" class="waves-effect">
@@ -170,24 +182,35 @@ if (($_SESSION['user_id']) == '') {
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
-          <i class="zmdi zmdi-wrench gold-icon mr-2" style="font-size: 19px;"></i><span>Technician</span>
+            <i class="zmdi zmdi-wrench gold-icon mr-2" style="font-size: 19px;"></i><span>Technician</span>
           </a>
           <ul class="sidebar-submenu">
             <li><a href="technician.php"><i class="zmdi zmdi-dot-circle-alt"></i>All Technician</a></li>
             <li><a href="technician_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Technician </a></li>
           </ul>
         </li>
+        <!-- <li>
+          <a href="javaScript:void();" class="waves-effect">
+
+            <i class="zmdi zmdi-wrench gold-icon mr-2" style="font-size: 19px;"></i><span>Technician Assignment</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="technician_assign.php"><i class="zmdi zmdi-dot-circle-alt"></i>Technician Assign</a></li>
+
+          </ul>
+        </li> -->
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
-          <i class="zmdi zmdi-accounts gold-icon mr-2" style="font-size: 19px;"></i>
-<span>Staff</span>
+            <i class="zmdi zmdi-accounts gold-icon mr-2" style="font-size: 19px;"></i>
+            <span>Staff</span>
           </a>
           <ul class="sidebar-submenu">
             <li><a href="staff.php"><i class="zmdi zmdi-dot-circle-alt"></i>All Staff</a></li>
             <li><a href="staff_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Staff </a></li>
           </ul>
         </li>
+        <li class="sidebar-header">Master Management</li>
         <!-- <li>
         <a href="javaScript:void();" class="waves-effect">
           <i class="zmdi zmdi-file"></i> <span>Customers</span>
@@ -262,6 +285,46 @@ if (($_SESSION['user_id']) == '') {
           <li><a href="videogallerycategory.php"><i class="zmdi zmdi-dot-circle-alt"></i>Video Gallery Categories</a></li>
         </ul>
        </li> -->
+       <li>
+          <a href="javaScript:void();" class="waves-effect">
+
+          <i class="fa fa-globe" style="font-size: 19px;"></i>
+            <span>Country</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="country.php"><i class="zmdi zmdi-dot-circle-alt"></i>All Country</a></li>
+            <li><a href="country_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Country </a></li>
+          </ul>
+        </li>
+        <li>
+        <a href="javascript:void(0);" class="waves-effect">
+        <i class="bi bi-map gold-icon mr-2" style="font-size: 19px;"></i>
+
+
+    <span>State</span>
+</a>
+
+          <ul class="sidebar-submenu">
+            <li><a href="state.php"><i class="zmdi zmdi-dot-circle-alt"></i>All State</a></li>
+            <li><a href="state_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New State </a></li>
+          </ul>
+        </li>
+        <li>
+        <a href="javascript:void(0);" class="waves-effect">
+        <i class="bi bi-buildings gold-icon mr-2" style="font-size: 19px;"></i>
+
+
+
+    <span>City</span>
+</a>
+
+
+
+          <ul class="sidebar-submenu">
+            <li><a href="city.php"><i class="zmdi zmdi-dot-circle-alt"></i>All City</a></li>
+            <li><a href="city_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New City </a></li>
+          </ul>
+        </li>
         <li>
           <a href="logout.php" class="waves-effect">
             <i class="icon-power mr-2"></i> <span>Logout</span>

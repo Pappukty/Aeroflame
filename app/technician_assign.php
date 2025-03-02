@@ -1,27 +1,54 @@
 <?php
+session_start(); // Start the session
+
 include_once './includes/header.php';
+error_reporting(1);
+// Check if the user is logged in
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+
+    $customer_id = $_POST['customer_id'];
+    $technician_id = $_POST['technician_id'];
+    $status = $_POST['status_process'];
+
+    // Ensure valid input
+    if (!empty($customer_id) && !empty($technician_id)) {
+        // Update work schedule
+        $sql = "UPDATE resolve SET technician_id = ?, status_process = ? WHERE customer_id = ?";
+        $stmt = $DatabaseCo->dbLink->prepare($sql);
+        $stmt->bind_param("isi", $technician_id, $status, $customer_id);
+
+        if ($stmt->execute()) {
+            echo json_encode(["status" => "success", "message" => "Work schedule updated successfully!"]);
+        } else {
+            echo json_encode(["status" => "error", "message" => "Error updating work schedule."]);
+        }
+
+        $stmt->close();
+    } else {
+        echo json_encode(["status" => "error", "message" => "Please select a technician."]);
+    }
+}
+
 
 ?>
-<style>
-    #delete_form .modal-dialog .modal-content .modal-body p {
-    color: white !important;
-}
-</style>
+
+
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">
         <div class="col-sm-8">
-            <h3 class="page-title">All Staff </h3>
+            <h3 class="page-title">All Technician Assignment </h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
-                <li class="breadcrumb-item active">Listing of All Staff </li>
+                <li class="breadcrumb-item active">Listing of All Technician Assignment </li>
             </ul>
         </div>
-        <div class="col-md-4" align="right">
-            <a class="btn btn-primary btn-rounded" href="staff_add.php">
-                <i class="mdi mdi-settings-outline mr-1"></i> Add New Staff
+        <!-- <div class="col-md-4" align="right">
+            <a class="btn btn-primary btn-rounded" href="technician_add.php">
+                <i class="mdi mdi-settings-outline mr-1"></i> Add New Technician
             </a>
-        </div>
+        </div> -->
     </div>
 </div>
 <!-- /Page Header -->
@@ -36,14 +63,17 @@ include_once './includes/header.php';
                         <thead>
                             <tr>
                                 <th class="w-5">Sno</th>
-                                <th class="w-15">Staff Image</th>
-                                <th class="w-15">Staff ID</th>
-                                <th class="w-25">Name</th>
-                                <th class="w-20">Contact</th>
-                                <th class="w-25">Email</th>
+                                <th class="w-15">consumer_id</th>
+                                <th class="w-15">customer_name</th>
+                                <th class="w-25">mobile_number</th>
 
+                                <!-- <th class="w-25">Email</th> -->
+                                <th class="w-15">Assigned Areas</th>
+                                <th class="w-15">employee_id</th>
+                                <th class="w-15">technician_name</th>
 
-                                <!-- <th class="w-25">Status</th> -->
+                                <!-- <th class="w-15">Type</th> -->
+                                <th class="w-25">Status</th>
                                 <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
                                 <th class="w-25">Action</th>
                                 <!-- <?php } ?> -->
@@ -51,64 +81,97 @@ include_once './includes/header.php';
                         </thead>
                         <tbody>
                             <?php
-                            $select = "SELECT * FROM `staff` WHERE id != '0' ORDER BY id DESC";
+                            $select = "SELECT * FROM `resolve` WHERE index_id != '0' ORDER BY index_id DESC";
                             $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
                             $num_rows = mysqli_num_rows($SQL_STATEMENT);
 
                             if ($num_rows != 0) {
                                 $i = 1;
                                 while ($Row = mysqli_fetch_object($SQL_STATEMENT)) {
+
+
+                                    $selectedCities = isset($Row->city) ? explode(',', $Row->city) : []; // Convert CSV to array
+
+                                    // Ensure we handle multiple city selections correctly
+                                    $cityIds = implode("','", $selectedCities); // Convert array to a string for SQL query
+                                    $sql3 = mysqli_query($DatabaseCo->dbLink, "SELECT * FROM cities WHERE id IN ('$cityIds')");
+                                    
+                                    $cityNames = [];
+
+                                    while ($res3 = mysqli_fetch_object($sql3)) {
+                                        $cityNames[] = $res3->name; // Collect city names
+                                    }
+
+                                    // Convert city names array into a comma-separated string
+                                    $mergedCityNames = implode(', ', $cityNames);
                             ?>
                                     <tr>
                                         <td><?php echo $i++; ?></td>
 
-                                        <!-- Staff Image -->
+                                        <!-- Technician Image -->
                                         <td>
-                                            <?php if (!empty($Row->photo)) { ?>
-                                                <a href="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>" target="_blank">
-                                                    <img src="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>"
-                                                        class="rounded header-profile-user" width="60" height="60" alt="Staff Image">
-                                                </a>
-                                            <?php } ?>
+                                            <?php echo htmlspecialchars($Row->consumer_id); ?>
                                         </td>
 
                                         <!-- Employee ID -->
-                                        <td><?php echo htmlspecialchars($Row->staff_id); ?></td>
+                                        <td><?php echo htmlspecialchars($Row->customer_name); ?></td>
 
-                                        <!-- Staff Name -->
-                                        <td><?php echo htmlspecialchars($Row->name); ?></td>
+                                        <!-- Technician Name -->
+                                        <td><?php echo htmlspecialchars($Row->mobile_number); ?></td>
 
                                         <!-- Contact -->
-                                        <td><?php echo htmlspecialchars($Row->contact); ?></td>
 
 
-                                        <td><?php echo htmlspecialchars($Row->email); ?></td>
-
+                                        <!-- Assigned Areas -->
+                                        <td>
+                                            <?php
+                                            $assigned_areas = json_decode($mergedCityNames, true);
+                                            echo is_array($assigned_areas) ? implode(', ', $assigned_areas) : htmlspecialchars($mergedCityNames);
+                                            ?>
+                                        </td>
+                                        <td>____</td>
+                                        <td>____</td>
                                         <!-- Availability Status Button -->
+                                        <td>
+                                            <button class="btn 
+                    <?php
 
+                                    if ($Row->status_process == 'completed') {
+                                        echo 'btn-success'; // Green button for completed
+                                    } elseif ($Row->status_process == 'pending') {
+                                        echo 'btn-warning text-dark'; // Yellow button for pending
+                                    } elseif ($Row->status_process == 'Filled') {
+                                        echo 'btn-primary'; // Blue button for filled
+                                    } else {
+                                        echo 'btn-secondary'; // Default gray button
+                                    }
+                    ?>">
+                                                <?php echo ucfirst(htmlspecialchars($Row->status_process)); ?>
+                                            </button>
+                                        </td>
 
                                         <!-- Action Buttons -->
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <!-- Edit Button -->
-                                                <div class="mr-3">
+                                                <!-- <div class="mr-3">
                                                     <a class="btn btn-sm p-2 btn-primary text-white edit-board"
-                                                        href="Staff_add.php?id=<?php echo $Row->id; ?>">
+                                                        href="technician_add.php?id=<?php echo $Row->index_id; ?>">
                                                         <i class="fa fa-pencil" style="font-size: 15px;"></i>
                                                     </a>
-                                                </div>
+                                                </div> -->
 
                                                 <!-- Delete Button -->
-                                                <div class="mr-3">
+                                                <!-- <div class="mr-3">
                                                     <a class="btn btn-sm p-2 btn-danger delete-board"
                                                         data-modal="delete-board-alert"
                                                         data-toggle="modal"
                                                         data-target="#delete-board-alert"
                                                         href="#0"
-                                                        data-id="<?php echo $Row->id; ?>">
+                                                        data-id="<?php echo $Row->index_id; ?>">
                                                         <i class="fa fa-trash" style="font-size: 15px;"></i>
                                                     </a>
-                                                </div>
+                                                </div> -->
 
                                                 <!-- Status Toggle Dropdown -->
                                                 <div class="dropdown">
@@ -127,14 +190,18 @@ include_once './includes/header.php';
                                                         <?php } ?>
 
                                                         <div class="dropdown-divider"></div> <!-- Adds a separator between status change and profile view -->
-                                                        <a class="dropdown-item" href="staff_view.php?id=<?php echo $Row->id; ?>">
+                                                        <!-- 
+                                                        <a class="dropdown-item" href="technician_profile.php?id=<?php echo $Row->id; ?>">
                                                             View Profile
+                                                        </a> -->
+                                                        <div class="dropdown-divider"></div>
+                                                        <!-- Work Schedule Button -->
+                                                        <a class="dropdown-item work-schedule-btn" href="javascript:void(0);"
+                                                            data-id="<?php echo htmlspecialchars($Row->city . '&&' . $Row->consumer_id); ?>"
+                                                            data-bs-toggle="modal" data-bs-target="#workScheduleModal">
+                                                            Work Schedule
                                                         </a>
 
-                                                        <div class="dropdown-divider"></div>
-                                                        <!-- <a class="dropdown-item" href="javascript:void(0);" onclick="showWorkSchedule('<?php echo $Row->id; ?>')">
-                                                            Work Schedule
-                                                        </a> -->
 
 
                                                     </div>
@@ -167,17 +234,17 @@ include_once './includes/header.php';
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="header-title">Delete Staff </h5>
+                    <h5 class="header-title">Delete Technician </h5>
                     <button type="btn" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" align="center">
-                    <h5 class="text-center">Delete Staff Details ?</h5>
-                    <p>Are you sure you want to delete this Staff details? All data and attached deals will be lost.</p>
+                    <h5 class="text-center">Delete Technician Details ?</h5>
+                    <p>Are you sure you want to delete this Technician details? All data and attached deals will be lost.</p>
                 </div>
                 <div class="modal-footer">
-                    <input type="hidden" name="form_action" value="DeleteStaff" />
+                    <input type="hidden" name="form_action" value="DeleteTechnician" />
                     <input type="hidden" name="delid" id="delid" value="" />
                     <button class="btn raised bg-primary text-white ml-2 mt-2" data-dismiss="modal">Cancel</button>
                     <button name="delete_now" type="submit" class="btn mt-2 btn-dash btn-danger raised has-icon" id="modalDelete" value="Delete">Delete</button>
@@ -189,37 +256,28 @@ include_once './includes/header.php';
 <div class="modal fade" id="workScheduleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Staff's Work Schedule</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <label for="customerList">Assigned Customers:</label>
-                <select class="form-control" name="customer_name" id="customer_name">
-                    <option value="" disabled selected>Select Customer</option>
-                    <?php
-                    // Fetch data from the database
-                    $data = $DatabaseCo->dbLink->query("SELECT * FROM `resolve`");
-
-                    if ($data->num_rows > 0) { // Check if data exists
-                        while ($fetch_data = mysqli_fetch_assoc($data)) {
-                            echo "<option value='{$fetch_data['id']}'>{$fetch_data['customer_name']}</option>";
-                        }
-                    } else {
-                        echo "<option value='' disabled>No Customers Available</option>";
-                    }
-                    ?>
-                </select>
-
-                <button class="btn btn-primary mt-3" onclick="assignCustomer()">Assign</button>
-            </div>
+            <form id="workScheduleForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Technician's Work Schedule</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="customer_name">Assigned Customers:</label>
+                    <select class="form-control" name="technician_id" id="customer_name" required>
+                        <option value="" disabled selected>Select Technician</option>
+                    </select>
+                    <input type="hidden" name="customer_id" id="customer_id">
+                    <input type="hidden" name="status_process" value="In-Progress">
+                    <button type="submit" class="btn btn-primary mt-3">Assign</button>
+                </div>
+            </form>
 
         </div>
     </div>
 </div>
-
+</div>
 
 
 <?php
@@ -231,6 +289,79 @@ include_once './includes/footer.php';
 <script src="assets/plugins/datatable/js/dataTables.bootstrap5.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $(".work-schedule-btn").click(function() {
+            var dataId = $(this).data("id"); // Example format: "1845 && 5678"
+            var values = dataId.split("&&");
+            var area_id = values[0].trim();
+            var customer_id = values[1].trim();
+
+            $("#customer_id").val(customer_id); // Assign customer ID to hidden input
+            $("#customer_name").find("option:not(:first)").remove(); // Clear previous options
+
+            $.ajax({
+                url: "fetch_technicians.php",
+                type: "POST",
+                data: {
+                    area_id: area_id
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === "success") {
+                        $.each(response.data, function(index, technician) {
+                            $("#customer_name").append(
+                                `<option value="${technician.id}">${technician.name}</option>`
+                            );
+                        });
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    console.log("XHR Error:", xhr.responseText);
+                    alert("Error fetching technicians.");
+                }
+            });
+        });
+
+        // Handle form submission
+        $("#workScheduleForm").submit(function(e) {
+            e.preventDefault();
+
+            var technician_id = $("#customer_name").val();
+            var customer_id = $("#customer_id").val();
+
+            if (!technician_id) {
+                alert("Please select a technician.");
+                return;
+            }
+
+            $.ajax({
+                url: "technician_assign.php",
+                type: "POST",
+                data: {
+                    customer_id: customer_id,
+                    technician_id: technician_id,
+                    status_process: "In-Progress"
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.status === "success") {
+                        alert(response.message);
+                        $("#workScheduleModal").modal("hide"); // Close modal
+                    } else {
+                        alert("Error: " + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    console.log("XHR Error:", xhr.responseText);
+                    alert("Error assigning technician.");
+                }
+            });
+        });
+    });
+</script>
 
 <script type="text/javascript">
     $('.delete-board').click(function() {
@@ -291,7 +422,7 @@ include_once './includes/footer.php';
 
                 if (response.status === 'success') {
                     toastr.success(response.message || "Status updated successfully!");
-                    setTimeout(() => location.reload(), 2500); // Refresh after success
+                    setTimeout(() => location.reload(), 1500); // Refresh after success
                 } else {
                     toastr.error(response.message || "Something went wrong, please try again!");
                 }
@@ -350,8 +481,8 @@ include_once './includes/footer.php';
     });
 </script>
 <script>
-    function showWorkSchedule(StaffId) {
-        console.log("Staff ID:", StaffId); // Debugging
+    function showWorkSchedule(technicianId) {
+        console.log("Technician ID:", technicianId); // Debugging
 
         // Dummy Tamil Nadu customer list
         var dummyCustomers = [{
@@ -390,56 +521,4 @@ include_once './includes/footer.php';
         $("#customerList").html(options);
         $("#workScheduleModal").modal("show");
     }
-</script>
-
-<script>
-    $(document).ready(function() {
-        $('#print_button').click(function(event) {
-            event.preventDefault();
-
-            let selectedProductIds = [];
-            $('.product-checkbox:checked').each(function() {
-                selectedProductIds.push($(this).val());
-            });
-
-            let productIdsString = selectedProductIds.join(',');
-
-            $.ajax({
-                url: 'print_process.php',
-                type: 'POST',
-                data: {
-                    product_ids: productIdsString
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        // Redirect to the new page with the product IDs as a query parameter
-                        window.location.href = 'print_layout.php?product_ids=' + encodeURIComponent(productIdsString);
-                    } else {
-                        alert(response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('An error occurred while processing your request.');
-                }
-            });
-        });
-    });
-</script>
-
-<script>
-    $(document).ready(function() {
-        $('#example').DataTable()
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        var table = $('#example2').DataTable({
-            lengthChange: false,
-            buttons: ['copy', 'excel', 'pdf', 'print']
-        });
-
-        table.buttons().container()
-            .appendTo('#example2_wrapper .col-md-6:eq(0)');
-    });
 </script>

@@ -2,7 +2,11 @@
 include_once './includes/header.php';
 
 ?>
-
+<style>
+    #delete_form .modal-dialog .modal-content .modal-body p {
+    color: white !important;
+}
+</style>
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">
@@ -204,19 +208,19 @@ include_once './includes/footer.php';
 </script>
 
 <script>
-  function markAsCompleted(id) {
-    console.log('ID:', id); // Log the ID being passed to ensure it's correct
+ function markAsCompleted(id) {
+    console.log('ID:', id); // Log ID for debugging
 
     $.ajax({
-        url: 'update.php', // PHP script to process the update
+        url: 'update.php', // Ensure this is the correct PHP script
         type: 'POST',
         data: {
-            id: id,
-            status: 'completed'
+            status_id: id, // Use the expected key
+            availability_status: 'Completed' // Match PHP expected values
         },
         dataType: 'json', // Expecting a JSON response
         success: function(response) {
-            console.log('Response from server:', response); // Log the server response
+            console.log('Response from server:', response); // Debugging
 
             toastr.options = {
                 closeButton: true,
@@ -231,14 +235,13 @@ include_once './includes/footer.php';
                 toastr.success(response.message || "Tickets Successfully Submitted!");
                 setTimeout(function() {
                     window.location.reload();
-                }, 1500); // Reload after notification
+                }, 1500);
             } else {
                 toastr.error(response.message || "Something went wrong, please try again!");
                 console.error('Error response received:', response);
             }
         },
         error: function(xhr, status, error) {
-            // Log detailed error information
             console.error('AJAX request failed:', xhr.responseText, status, error);
 
             toastr.options = {
@@ -246,7 +249,7 @@ include_once './includes/footer.php';
                 progressBar: true,
                 showMethod: "fadeIn",
                 hideMethod: "fadeOut",
-                timeOut: 3000, // 3 seconds
+                timeOut: 3000,
                 positionClass: "toast-top-right"
             };
 
@@ -254,6 +257,7 @@ include_once './includes/footer.php';
         }
     });
 }
+
 
 </script>
 

@@ -3,11 +3,12 @@ include_once './includes/header.php';
 
 
 if($_GET['id']) {
-    $id=base64_decode($_GET['id']);
+    $id=$_GET['id'];
 }
 $select = "SELECT * FROM staff WHERE id='$id'";//echo $select;
 $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink,$select);
 $Row =mysqli_fetch_object($SQL_STATEMENT);
+
 
 
 $photos = ($Row->photo !='')?'../uploads/staff/'.$Row->photo:'./assets/images/nophoto.png';
@@ -33,6 +34,9 @@ $photos = ($Row->photo !='')?'../uploads/staff/'.$Row->photo:'./assets/images/no
     }
     .header-title{
         color: black;
+    }
+    p {
+      color: black;
     }
     a.btn-light {
       color: white; /* Ensures button text is readable on a light button */
@@ -106,10 +110,10 @@ $photos = ($Row->photo !='')?'../uploads/staff/'.$Row->photo:'./assets/images/no
                       <p>      <?php echo $Row->designation; ?></p>
                     </div>
                     <!-- Password Info -->
-                    <div class="info-block mb-3">
+                    <!-- <div class="info-block mb-3">
                       <strong>Password:</strong>
-                      <p>      <?php echo base64_decode($Row->password); ?></p>
-                    </div>
+                      <p>      <?php echo $decoded_password; ?></p>
+                    </div> -->
                   </div>
                 </div><!-- End row -->
               </div><!-- End tab-pane -->

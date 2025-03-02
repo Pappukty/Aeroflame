@@ -1,8 +1,25 @@
 <?php
+session_start(); // Start the session
+
 include_once './includes/header.php';
 
+// Check if the user is logged in
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    echo "<script>window.location='login.php';</script>";
+    exit();
+}
+
+// Fetch user data
+$user_id = $_SESSION['user_id'];
+
+echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure output
 ?>
 
+<style>
+    #delete_form .modal-dialog .modal-content .modal-body p {
+        color: white !important;
+    }
+</style>
 <!-- Page Header -->
 <div class="page-header">
     <div class="row">
@@ -54,7 +71,22 @@ include_once './includes/header.php';
                             if ($num_rows != 0) {
                                 $i = 1;
                                 while ($Row = mysqli_fetch_object($SQL_STATEMENT)) {
+                                    $selectedCities = isset($Row->city) ? explode(',', $Row->city) : []; // Convert CSV to array
+
+                                    // Ensure we handle multiple city selections correctly
+                                    $cityIds = implode("','", $selectedCities); // Convert array to a string for SQL query
+                                    $sql3 = mysqli_query($DatabaseCo->dbLink, "SELECT * FROM cities WHERE id IN ('$cityIds')");
+                                    $cityNames = [];
+
+                                    while ($res3 = mysqli_fetch_object($sql3)) {
+                                        $cityNames[] = $res3->name; // Collect city names
+                                    }
+
+                                    // Convert city names array into a comma-separated string
+                                    $mergedCityNames = implode(', ', $cityNames);
+
                             ?>
+
                                     <tr>
                                         <td><?php echo $i++; ?></td>
 
@@ -80,8 +112,8 @@ include_once './includes/header.php';
                                         <!-- Assigned Areas -->
                                         <td>
                                             <?php
-                                            $assigned_areas = json_decode($Row->assigned_areas, true);
-                                            echo is_array($assigned_areas) ? implode(', ', $assigned_areas) : htmlspecialchars($Row->assigned_areas);
+                                            $assigned_areas = json_decode($mergedCityNames, true);
+                                            echo is_array($assigned_areas) ? implode(', ', $assigned_areas) : htmlspecialchars($mergedCityNames);
                                             ?>
                                         </td>
 
@@ -146,10 +178,10 @@ include_once './includes/header.php';
                                                             View Profile
                                                         </a>
                                                         <div class="dropdown-divider"></div>
-                                                       <!-- Work Schedule Button -->
-<a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#workScheduleModal<?php echo $Row->id; ?>">
-    Work Schedule
-</a>
+                                                        <!-- Work Schedule Button -->
+                                                        <!-- <a class="dropdown-item" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#workScheduleModal">
+                                                            Work Schedule
+                                                        </a> -->
 
 
                                                     </div>
@@ -406,4 +438,56 @@ include_once './includes/footer.php';
         $("#customerList").html(options);
         $("#workScheduleModal").modal("show");
     }
+</script>
+
+<script>
+    $(document).ready(function() {
+        $('#print_button').click(function(event) {
+            event.preventDefault();
+
+            let selectedProductIds = [];
+            $('.product-checkbox:checked').each(function() {
+                selectedProductIds.push($(this).val());
+            });
+
+            let productIdsString = selectedProductIds.join(',');
+
+            $.ajax({
+                url: 'print_process.php',
+                type: 'POST',
+                data: {
+                    product_ids: productIdsString
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Redirect to the new page with the product IDs as a query parameter
+                        window.location.href = 'print_layout.php?product_ids=' + encodeURIComponent(productIdsString);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('An error occurred while processing your request.');
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        $('#example').DataTable()
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        var table = $('#example2').DataTable({
+            lengthChange: false,
+            buttons: ['copy', 'excel', 'pdf', 'print']
+        });
+
+        table.buttons().container()
+            .appendTo('#example2_wrapper .col-md-6:eq(0)');
+    });
 </script>

@@ -1,26 +1,76 @@
-<?php
+<?php ob_start();
 include_once './includes/header.php';
+if ($_REQUEST['state_id']) {
+    $state = $_REQUEST['state_id'];
+} else {
+    $state = "38";
+}
+error_reporting(1);
+if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
+    $del_id = intval($_POST['del_c']); // Sanitize input to avoid SQL injection
+
+    $query = "DELETE FROM `cities` WHERE `id` = ?";
+    $stmt = $DatabaseCo->dbLink->prepare($query);
+    $stmt->bind_param("i", $del_id);
+
+    if ($stmt->execute()) {
+        echo "<script>
+              
+                window.location.href = 'city.php';
+              </script>";
+    } else {
+        echo "<script>alert('Error deleting record: " . $stmt->error . "');</script>";
+    }
+
+    $stmt->close();
+    $DatabaseCo->dbLink->close();
+}
+// Check if delete ID is available in the request
 
 ?>
+
+
+
 <style>
-    #delete_form .modal-dialog .modal-content .modal-body p {
-    color: white !important;
-}
+    .form-select {
+        width: 60% !important;
+    }
 </style>
-<!-- Page Header -->
+
+
+
 <div class="page-header">
     <div class="row">
         <div class="col-sm-8">
-            <h3 class="page-title">All Staff </h3>
+            <h3 class="page-title">All Country </h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
-                <li class="breadcrumb-item active">Listing of All Staff </li>
+                <li class="breadcrumb-item active">Listing of All State </li>
             </ul>
         </div>
         <div class="col-md-4" align="right">
-            <a class="btn btn-primary btn-rounded" href="staff_add.php">
-                <i class="mdi mdi-settings-outline mr-1"></i> Add New Staff
+            <a class="btn btn-primary btn-rounded" href="city_add.php">
+                <i class="mdi mdi-settings-outline mr-1"></i> Add New City
             </a>
+        </div>
+        <div class="dropdown">
+
+            <div class="form-group">
+                <label for="countryDropdown" class="fw-semi-bold">Select State</label>
+                <select class="form-control" id="countryDropdown">
+                    <option value="">Select state</option>
+                    <?php
+                    $select = "SELECT * FROM `states` ORDER BY `id` ASC";
+                    $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
+                    if (mysqli_num_rows($SQL_STATEMENT) != 0) {
+                        while ($Row = mysqli_fetch_object($SQL_STATEMENT)) { ?>
+                            <option value="<?php echo htmlspecialchars($Row->id); ?>">
+                                <?php echo $Row->name; ?>
+                            </option>
+                    <?php }
+                    } ?>
+                </select>
+            </div>
         </div>
     </div>
 </div>
@@ -30,70 +80,51 @@ include_once './includes/header.php';
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-
                 <div class="table-responsive">
                     <table id="example2" class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                         <thead>
                             <tr>
                                 <th class="w-5">Sno</th>
-                                <th class="w-15">Staff Image</th>
-                                <th class="w-15">Staff ID</th>
-                                <th class="w-25">Name</th>
-                                <th class="w-20">Contact</th>
-                                <th class="w-25">Email</th>
+                                <!-- <th class="w-5">City Id</th> -->
 
+                                <th class="w-15">State Code</th>
 
-                                <!-- <th class="w-25">Status</th> -->
-                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                                <th class="w-25">Action</th>
-                                <!-- <?php } ?> -->
+                                <th class="w-25">City Name</th>
+                                <th class="w-20">Status</th>
+                                <th class="w-5">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            $select = "SELECT * FROM `staff` WHERE id != '0' ORDER BY id DESC";
+                            <?php  // Example: State ID to filter cities, change as needed
+
+                            $select = "SELECT * FROM `cities` 
+                           WHERE id != '0' AND state_id = '$state' 
+                              ORDER BY id DESC";
+
                             $SQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $select);
                             $num_rows = mysqli_num_rows($SQL_STATEMENT);
-
                             if ($num_rows != 0) {
                                 $i = 1;
                                 while ($Row = mysqli_fetch_object($SQL_STATEMENT)) {
+                                    $sql3 = mysqli_query($DatabaseCo->dbLink, "SELECT name FROM `states` WHERE id='" . $Row->state_id . "'");
+                                    $res3 = mysqli_fetch_object($sql3);
                             ?>
                                     <tr>
-                                        <td><?php echo $i++; ?></td>
+                                        <td><?php echo $i;
+                                            $i++; ?></td>
 
-                                        <!-- Staff Image -->
+                                        <!-- <td><?php echo $Row->city_id; ?></td> -->
+
+                                        <td><?php echo $Row->state_id; ?></td>
+                                        <td><?php echo $Row->name; ?></td>
+                                        <td><?php echo $Row->status; ?></td>
+
                                         <td>
-                                            <?php if (!empty($Row->photo)) { ?>
-                                                <a href="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>" target="_blank">
-                                                    <img src="../uploads/staff/<?php echo htmlspecialchars($Row->photo); ?>"
-                                                        class="rounded header-profile-user" width="60" height="60" alt="Staff Image">
-                                                </a>
-                                            <?php } ?>
-                                        </td>
-
-                                        <!-- Employee ID -->
-                                        <td><?php echo htmlspecialchars($Row->staff_id); ?></td>
-
-                                        <!-- Staff Name -->
-                                        <td><?php echo htmlspecialchars($Row->name); ?></td>
-
-                                        <!-- Contact -->
-                                        <td><?php echo htmlspecialchars($Row->contact); ?></td>
-
-
-                                        <td><?php echo htmlspecialchars($Row->email); ?></td>
-
-                                        <!-- Availability Status Button -->
-
-
-                                        <!-- Action Buttons -->
-                                        <td>
-                                            <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                                 <!-- Edit Button -->
                                                 <div class="mr-3">
                                                     <a class="btn btn-sm p-2 btn-primary text-white edit-board"
-                                                        href="Staff_add.php?id=<?php echo $Row->id; ?>">
+                                                        href="city_add.php?id=<?php echo $Row->id; ?>">
                                                         <i class="fa fa-pencil" style="font-size: 15px;"></i>
                                                     </a>
                                                 </div>
@@ -109,47 +140,17 @@ include_once './includes/header.php';
                                                         <i class="fa fa-trash" style="font-size: 15px;"></i>
                                                     </a>
                                                 </div>
-
-                                                <!-- Status Toggle Dropdown -->
-                                                <div class="dropdown">
-                                                    <button class="btn btn-light btn-rounded dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                        <i class="mdi mdi-tune"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated">
-                                                        <?php if ($Row->availability_status == 'Active') { ?>
-                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="updateStatus('<?php echo $Row->id; ?>', 'Inactive')">
-                                                                Set as Inactive
-                                                            </a>
-                                                        <?php } elseif ($Row->availability_status == 'Inactive') { ?>
-                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="updateStatus('<?php echo $Row->id; ?>', 'Active')">
-                                                                Set as Active
-                                                            </a>
-                                                        <?php } ?>
-
-                                                        <div class="dropdown-divider"></div> <!-- Adds a separator between status change and profile view -->
-                                                        <a class="dropdown-item" href="staff_view.php?id=<?php echo $Row->id; ?>">
-                                                            View Profile
-                                                        </a>
-
-                                                        <div class="dropdown-divider"></div>
-                                                        <!-- <a class="dropdown-item" href="javascript:void(0);" onclick="showWorkSchedule('<?php echo $Row->id; ?>')">
-                                                            Work Schedule
-                                                        </a> -->
-
-
-                                                    </div>
-                                                </div>
-
-                                            </div>
                                         </td>
                                     </tr>
-                                <?php
-                                }
+                                <?php }
                             } else { ?>
                                 <tr>
-                                    <td colspan="9" class="text-center"><strong>No Records Found!</strong></td>
+                                    <td colspan="9">
+                                        <div align="center"><strong>No Records!</strong></div>
+                                    </td>
                                 </tr>
                             <?php } ?>
+
                         </tbody>
 
                     </table>
@@ -167,17 +168,17 @@ include_once './includes/header.php';
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="header-title">Delete Staff </h5>
+                    <h5 class="header-title">Delete City </h5>
                     <button type="btn" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" align="center">
-                    <h5 class="text-center">Delete Staff Details ?</h5>
-                    <p>Are you sure you want to delete this Staff details? All data and attached deals will be lost.</p>
+                    <h5 class="text-center">Delete City Details ?</h5>
+                    <p>Are you sure you want to delete this City details? All data and attached deals will be lost.</p>
                 </div>
                 <div class="modal-footer">
-                    <input type="hidden" name="form_action" value="DeleteStaff" />
+                    <input type="hidden" name="form_action" value="DeleteCity" />
                     <input type="hidden" name="delid" id="delid" value="" />
                     <button class="btn raised bg-primary text-white ml-2 mt-2" data-dismiss="modal">Cancel</button>
                     <button name="delete_now" type="submit" class="btn mt-2 btn-dash btn-danger raised has-icon" id="modalDelete" value="Delete">Delete</button>
@@ -186,40 +187,6 @@ include_once './includes/header.php';
         </div>
     </form>
 </div>
-<div class="modal fade" id="workScheduleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Staff's Work Schedule</h5>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <label for="customerList">Assigned Customers:</label>
-                <select class="form-control" name="customer_name" id="customer_name">
-                    <option value="" disabled selected>Select Customer</option>
-                    <?php
-                    // Fetch data from the database
-                    $data = $DatabaseCo->dbLink->query("SELECT * FROM `resolve`");
-
-                    if ($data->num_rows > 0) { // Check if data exists
-                        while ($fetch_data = mysqli_fetch_assoc($data)) {
-                            echo "<option value='{$fetch_data['id']}'>{$fetch_data['customer_name']}</option>";
-                        }
-                    } else {
-                        echo "<option value='' disabled>No Customers Available</option>";
-                    }
-                    ?>
-                </select>
-
-                <button class="btn btn-primary mt-3" onclick="assignCustomer()">Assign</button>
-            </div>
-
-        </div>
-    </div>
-</div>
-
 
 
 <?php
@@ -229,9 +196,78 @@ include_once './includes/footer.php';
 
 <script src="assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
 <script src="assets/plugins/datatable/js/dataTables.bootstrap5.min.js"></script>
+<script type="text/javascript">
+    // $("#add_form").submit(function(event) {
+    //     event.preventDefault();
+    //     var post_url = $(this).attr("action");
+    //     var request_method = $(this).attr("method");
+    //     var form_data = $("#add_form").serialize();
+    //     //alert(form_data);
+    //     $.ajax({
+    //         url: post_url,
+    //         type: request_method,
+    //         dataType: "text",
+    //         data: form_data
+    //     }).done(function(response) {
+    //         console.log(response);
+    //         //window.location.reload();
+    //     });
+    // });
+    $("#add_form").submit(function(event) {
+        event.preventDefault();
+        var post_url = $(this).attr("action");
+        var request_method = $(this).attr("method");
+        var form = $('#add_form')[0];
+        var data = new FormData(form);
+        //alert(data);
+        $.ajax({
+            type: "POST",
+            url: "packages-process.php",
+            data: data,
+            processData: false,
+            contentType: false,
+            cache: false,
+            timeout: 600000,
+            success: function(data) {
+                var newPatient = $.trim(data);
+                //console.log(newPatient);
+                // $("#new_patient_id").val(newPatient);
+                // $("#hideDate").hide();             
+                // $("#hideTrouble").hide();              
+                // $('#patient_details').modal('hide');
+                // $('#appointment_add').modal('show');
+                //   window.location.href="billing.php?type=1";
+                window.location.reload();
+            },
+            error: function(event) {
+                console.log("ERROR : ", event);
+                window.location.reload();
+            }
+        });
+    })
+    $('.drop-edit-board').click(function() {
+        var id = $(this).data('id');
+        $("#pget_id").val(id);
+        $("#vcategory").hide();
+        var dataString = 'TourAddedit=' + id;
+        $("#hidden_id").val(id);
+        $.ajax({
+            url: "packages-process.php",
+            type: "POST",
+            dataType: "text",
+            data: dataString
+        }).done(function(html) { //alert(html);
+            var arr = html.split("|");
+            $("#package_name").val(arr[0]);
+            $("#package_price").val(arr[1]);
+            $("#number_of_nights").val(arr[2]);
+            $("#others_details").val(arr[3]);
+            $("#number_of_days").val(arr[4]);
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        });
 
+    });
+</script>
 <script type="text/javascript">
     $('.delete-board').click(function() {
         var id = $(this).data('id');
@@ -263,7 +299,6 @@ include_once './includes/footer.php';
         });
     });
 </script>
-
 <script>
     function updateStatus(id, newStatus) {
         console.log("Updating ID:", id, "New Status:", newStatus);
@@ -441,5 +476,21 @@ include_once './includes/footer.php';
 
         table.buttons().container()
             .appendTo('#example2_wrapper .col-md-6:eq(0)');
+    });
+</script>
+<script>
+    $("#countryDropdown").on('change', function() {
+        const selectedValue = this.value;
+        console.log(selectedValue);
+        if (selectedValue) {
+            // Use correct string interpolation for the URL
+            window.location.href = `city.php?state_id=${selectedValue}`;
+        }
+    });
+</script>
+<script>
+    $(document).on('click', '.delete-board', function() {
+        var countryId = $(this).data('id'); // Get the data-id from the button
+        $('#delid').val(countryId); // Assign it to the hidden input field
     });
 </script>

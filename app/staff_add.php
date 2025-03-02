@@ -7,8 +7,8 @@ error_reporting(1);
 
 if (isset($_REQUEST['submit'])) {
     // Ensure XSS Cleaner is initialized
-    
-    
+
+
     // Clean input data
     $name = $xssClean->clean_input($_REQUEST['name']);
     $contact = $xssClean->clean_input($_REQUEST['contact']);
@@ -16,10 +16,10 @@ if (isset($_REQUEST['submit'])) {
     $email = $xssClean->clean_input($_REQUEST['email']);
     $designation = $xssClean->clean_input($_REQUEST['designation']);
     $password = password_hash($xssClean->clean_input($_REQUEST['password']), PASSWORD_BCRYPT);
-    
+
     // Ensure DatabaseCo is initialized
-    
-    
+
+
     // Check if it's an update operation
     if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
         $d_id = intval($_REQUEST['id']);
@@ -53,7 +53,7 @@ if (isset($_REQUEST['submit'])) {
         $stmt->execute();
         $d_id = $stmt->insert_id; // Get last inserted ID for image update
     }
-    
+
     // Handle Image Upload
     $uploadimage = new ImageUploader($DatabaseCo);
     if (isset($_FILES['photo']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
@@ -64,7 +64,7 @@ if (isset($_REQUEST['submit'])) {
             $stmt->execute();
         }
     }
-    
+
     // Redirect after completion
     header("Location: staff.php");
     exit();
@@ -106,12 +106,14 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
         border-radius: 5px;
         padding: 3px 8px;
     }
+
     .select2-container--default .select2-selection--multiple .select2-selection__choice {
-    color: black !important;
-}
-.select2-selection .select2-selection--multiple{
-    color: black !important;
-}
+        color: black !important;
+    }
+
+    .select2-selection .select2-selection--multiple {
+        color: black !important;
+    }
 </style>
 <!-- Page Header -->
 <div class="page-header">
@@ -156,26 +158,26 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
                         </div>
                     </div>
                     <div class="row mb-3">
-                    <div class="col-md-6">
-                 
-                        <label class="pull-left">Designation</label>
-                        <div class="control has-icons-left">
-                        <select name="designation" id="designation" required class="form-control">
-    <option value="">Select Designation</option>
-    <option value="Director" <?php echo ($Row->designation == "Director") ? "selected" : ""; ?>>Director</option>
-    <option value="Branch Manager" <?php echo ($Row->designation == "Branch Manager") ? "selected" : ""; ?>>Branch Manager</option>
-    <option value="Accountant" <?php echo ($Row->designation == "Accountant") ? "selected" : ""; ?>>Accountant</option>
-    <option value="Supervisor" <?php echo ($Row->designation == "Supervisor") ? "selected" : ""; ?>>Supervisor</option>
-    <option value="Support Team" <?php echo ($Row->designation == "Support Team") ? "selected" : ""; ?>>Support Team</option>
-</select>
+                        <div class="col-md-6">
 
-                      
-                    </div>
-                </div>
-                        
+                            <label class="pull-left">Designation</label>
+                            <div class="control has-icons-left">
+                                <select name="designation" id="designation" required class="form-control">
+                                    <option value="">Select Designation</option>
+                                    <option value="Director" <?php echo ($Row->designation == "Director") ? "selected" : ""; ?>>Director</option>
+                                    <option value="Branch Manager" <?php echo ($Row->designation == "Branch Manager") ? "selected" : ""; ?>>Branch Manager</option>
+                                    <option value="Accountant" <?php echo ($Row->designation == "Accountant") ? "selected" : ""; ?>>Accountant</option>
+                                    <option value="Supervisor" <?php echo ($Row->designation == "Supervisor") ? "selected" : ""; ?>>Supervisor</option>
+                                    <option value="Support Team" <?php echo ($Row->designation == "Support Team") ? "selected" : ""; ?>>Support Team</option>
+                                </select>
+
+
+                            </div>
+                        </div>
+
                         <div class="col-md-6">
                             <label class="form-label">Photo</label>
-                            <input type="file" class="form-control" name="photo" value="<?php echo $Row->photo ?>" >
+                            <input type="file" class="form-control" name="photo" value="<?php echo $Row->photo ?>">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -186,7 +188,7 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
                         </div>
                     </div>
                     <div class="text-center">
-                    <input name="submit" type="submit" class="btn btn-primary" value="<?php echo $titl; ?>" />
+                        <input name="submit" type="submit" class="btn btn-primary" value="<?php echo $titl; ?>" />
                         <!-- <button type="reset" class="btn btn-secondary">Reset</button> -->
                     </div>
                 </form>

@@ -76,7 +76,9 @@ body {
 ::selection {
   background: rgba(255, 255, 255, 0.2);
 }
-
+#delete_form .modal-dialog .modal-content .modal-body p {
+    color: white !important;
+}
 select option {
     /* background: #000;
      */
@@ -269,7 +271,9 @@ hr {
 	border-top: 1px solid rgba(0, 0, 0, .1)
 }
 p {
-  margin-bottom: .65rem
+  margin-bottom: .65rem;
+  color: white;
+  
 }
 :focus {
   outline: 0!important

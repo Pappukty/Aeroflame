@@ -1,6 +1,6 @@
 <?php include_once './includes/header.php';
 include_once './class/fileUploader.php';
-error_reporting(0);
+error_reporting(1);
 include_once './class/databaseConn.php';
 include_once './lib/requestHandler.php';
 $DatabaseCo = new DatabaseConn();
@@ -45,6 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $oate = $DatabaseCo->dbLink->real_escape_string($_POST['oate']);
   $reverse_description = $DatabaseCo->dbLink->real_escape_string($_POST['reverse_description']);
   $resolution_remarks = $DatabaseCo->dbLink->real_escape_string($_POST['resolution_remarks']);
+  $country = $DatabaseCo->dbLink->real_escape_string($_POST['country']);
+  $state = $DatabaseCo->dbLink->real_escape_string($_POST['state']);
+  $cities = isset($_REQUEST['city']) ? $_REQUEST['city'] : [];
+  $city = implode(',', array_map([$xssClean, 'clean_input'], $cities));
+  $assigned_areas = $DatabaseCo->dbLink->real_escape_string($_POST['assigned_areas']);
 
   // Checkbox values (set to 0 if unchecked)
   $complaint = isset($_POST['complaint']) ? 1 : 0;
@@ -56,8 +61,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $id = isset($_REQUEST['id']) ? (int)$_REQUEST['id'] : 0;
 
   if ($id > 0) {
-      // Update existing record
-      $sql = "UPDATE resolve SET 
+    // Update existing record
+    $sql = "UPDATE resolve SET 
           consumer_id='$consumer_id', feedback_id='$feedback_id', consumer_customer='$consumer_customer', 
           consumer_number='$consumer_number', customer_name='$customer_name', mobile_number='$mobile_number', 
           google_url='$google_url', email='$email', social_media_agency='$social_media_agency', 
@@ -70,36 +75,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           external_party='$external_party', oate='$oate', reverse_description='$reverse_description', 
           resolution_remarks='$resolution_remarks', complaint='$complaint', 
           redirected_grievance_center='$redirected_grievance_center', vigilance_flag='$vigilance_flag', 
-          mdg='$mdg'
+          mdg='$mdg',country='$country',state='$state',city='$city',assigned_areas='$assigned_areas'
           WHERE index_id='$id'";
 
-      if ($DatabaseCo->dbLink->query($sql) === TRUE) {
-          // echo "Record updated successfully.";
-      } else {
-          echo "Error: " . $sql . "<br>" . $DatabaseCo->dbLink->error;
-      }
+    if ($DatabaseCo->dbLink->query($sql) === TRUE) {
+      // echo "Record updated successfully.";
+    } else {
+      echo "Error: " . $sql . "<br>" . $DatabaseCo->dbLink->error;
+    }
   } else {
-      // Insert new record with default 'pending' status
-      $sql = "INSERT INTO resolve (
+    // Insert new record with default 'pending' status
+    $sql = "INSERT INTO resolve (
           consumer_id, feedback_id, consumer_customer, consumer_number, customer_name, mobile_number, google_url, email,
           social_media_agency, address, sr_number, priority, channel, date_opened, sr_state, ldr, type, escalation_level,
           escalation_date, sr_district, resolution_category, status, channel_reference_id, response_date, partner_name,
           sub_category, receiver_social_id, assigned_to, resolved_date, external_party, oate, reverse_description, 
-          resolution_remarks, complaint, redirected_grievance_center, vigilance_flag, mdg, status_process
+          resolution_remarks, complaint, redirected_grievance_center, vigilance_flag, mdg, status_process,assigned_areas,country,state,city
       ) VALUES (
           '$consumer_id', '$feedback_id', '$consumer_customer', '$consumer_number', '$customer_name', '$mobile_number', 
           '$google_url', '$email', '$social_media_agency', '$address', '$sr_number', '$priority', '$channel', '$date_opened', 
           '$sr_state', '$ldr', '$type', '$escalation_level', '$escalation_date', '$sr_district', '$resolution_category', 
           '$status', '$channel_reference_id', '$response_date', '$partner_name', '$sub_category', '$receiver_social_id', 
           '$assigned_to', '$resolved_date', '$external_party', '$oate', '$reverse_description', '$resolution_remarks', 
-          '$complaint', '$redirected_grievance_center', '$vigilance_flag', '$mdg', 'pending'
+          '$complaint', '$redirected_grievance_center', '$vigilance_flag', '$mdg', 'pending','$assigned_areas','$country','$state','$city'
       )";
 
-      if ($DatabaseCo->dbLink->query($sql) === TRUE) {
-          // echo "Record inserted successfully.";
-      } else {
-          echo "Error: " . $sql . "<br>" . $DatabaseCo->dbLink->error;
-      }
+    if ($DatabaseCo->dbLink->query($sql) === TRUE) {
+      // echo "Record inserted successfully.";
+    } else {
+      echo "Error: " . $sql . "<br>" . $DatabaseCo->dbLink->error;
+    }
   }
   header("Location: Tickets.php");
   exit;
@@ -119,7 +124,37 @@ if ($_REQUEST['id'] > 0) {
 
 
 ?>
+<style>
+    /* Custom Styling */
+    .select2-container .select2-selection--multiple {
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        padding: 5px;
+        color: black;
+        border: 0px solid #e5eaef;
+        background-color: rgba(255, 255, 255, 0.2);
+        /* color: #fff !important; */
+    }
 
+    .multiple option {
+        color: black !important;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #007bff;
+        color: black;
+        border-radius: 5px;
+        padding: 3px 8px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        color: black !important;
+    }
+
+    .select2-selection .select2-selection--multiple {
+        color: black !important;
+    }
+</style>
 <!-- Page Header -->
 <div class="page-header">
   <div class="row">
@@ -231,6 +266,96 @@ if ($_REQUEST['id'] > 0) {
                 name="social_media_agency" />
             </div>
             <div class="col-md-6">
+              <label class="required fw-medium mb-2">Country</label>
+              <?php
+              $options = ''; // Initialize an empty string for options
+              $Vselect = "SELECT * FROM countries ORDER BY name";
+
+              // Execute the SQL query and handle errors
+              $VSQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $Vselect);
+              if (!$VSQL_STATEMENT) {
+                die("Database query failed: " . mysqli_error($DatabaseCo->dbLink));
+              }
+
+              // Fetch each row and append to the $options string
+              foreach (mysqli_fetch_all($VSQL_STATEMENT, MYSQLI_ASSOC) as $VRow) {
+                // Check if the current row should be marked as selected
+                $isSelected = ($VRow['id'] === $Row->country) ? 'selected' : '';
+                $options .= "<option value='{$VRow['id']}' $isSelected>{$VRow['name']}</option>";
+              }
+              ?>
+
+              <select class="form-control mb-3" name="country" id="country">
+                <option selected disabled>Select Country</option>
+                <?php echo $options; // Output all options 
+                ?>
+              </select>
+
+            </div>
+            <div class="col-md-6">
+              <label for="Assigned_Areas" class="form-label fw-bold">State</label>
+
+
+
+              <select class="form-control mb-3" name="state" id="state">
+                <option selected disabled>Select State</option>
+                <?php
+                // Load states based on the selected country
+                $state = isset($Row->state) ? $Row->state : ''; // Current state code
+
+                $stateQuery = "SELECT * FROM states WHERE country_id = '$Row->country' ORDER BY name";
+                $stateResult = mysqli_query($DatabaseCo->dbLink, $stateQuery);
+                while ($stateRow = mysqli_fetch_object($stateResult)) {
+                  $selected = ($stateRow->id == $state) ? 'selected' : '';
+                  echo "<option value='{$stateRow->id}' $selected>{$stateRow->name}</option>";
+                }
+
+                ?>
+              </select>
+
+
+            </div>
+            <div class="col-md-6">
+              <label class="required fw-medium mb-2">City</label>
+              <?php
+              $options = '';
+
+              // Fetch existing selected city IDs (comma-separated)
+              $currentCities = isset($Row->city) ? explode(',', $Row->city) : [];
+
+              // Fetch cities based on the state selection
+              $cityQuery = "SELECT * FROM `cities` 
+                            WHERE id != '0' AND state_id = '$state' 
+                               ORDER BY id DESC";
+              $cityResult = mysqli_query($DatabaseCo->dbLink, $cityQuery);
+
+              if (!$cityResult) {
+                die("Database query failed: " . mysqli_error($DatabaseCo->dbLink));
+              }
+
+              // Generate city dropdown options
+              foreach (mysqli_fetch_all($cityResult, MYSQLI_ASSOC) as $cityRow) {
+                $selected = in_array($cityRow['id'], $currentCities) ? 'selected' : '';
+                $options .= "<option value='{$cityRow['id']}' $selected>{$cityRow['name']}</option>";
+              }
+
+              ?>
+
+              <select class="form-control mb-3" name="city[]" id="city" multiple>
+                <?php echo $options; ?>
+              </select>
+
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="address" class="form-label">Area</label>
+              <input
+                type="text"
+                class="form-control"
+                id="address"
+                value="<?php echo $Row->area; ?>"
+                name="assigned_areas" />
+            </div>
+            <div class="col-md-6 mb-3">
               <label for="address" class="form-label">Address</label>
               <input
                 type="text"
@@ -494,7 +619,7 @@ if ($_REQUEST['id'] > 0) {
               <textarea
                 class="form-control"
                 id="description"
-               
+
                 name="reverse_description"><?php echo $Row->reverse_description; ?></textarea>
             </div>
             <div class="col-md-12">
@@ -506,10 +631,10 @@ if ($_REQUEST['id'] > 0) {
             </div>
           </div>
           <div class="mt-4">
-          <input name="submit" type="submit" class="btn btn-primary" value="<?php echo $titl; ?>" />
+            <input name="submit" type="submit" class="btn btn-primary" value="<?php echo $titl; ?>" />
           </div>
           <!-- Submit Button -->
-        
+
         </form>
       </div>
     </div>
@@ -543,3 +668,63 @@ include_once './includes/footer.php';
     margin-top: 0.25rem;
   }
 </style>
+<script>
+    $(document).ready(function() {
+        // Load states when a country is selected
+        $('#country').change(function() {
+            let countryCode = $(this).val();
+            console.log("Selected Country:", countryCode);
+
+            if (countryCode) {
+                $.ajax({
+                    url: 'get_states.php',
+                    type: 'POST',
+                    data: {
+                        country_code: countryCode
+                    },
+                    success: function(response) {
+                        console.log("States Loaded:", response);
+                        $('#state').html(response);
+                        $('#city').html('').trigger('change'); // Reset city dropdown
+                    },
+                    error: function() {
+                        console.error("Error loading states.");
+                    }
+                });
+            } else {
+                $('#state, #city').html('').trigger('change'); // Reset both if no country is selected
+            }
+        });
+
+        // Load cities when a state is selected
+        $('#city').select2({
+        placeholder: "Select City",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Handle state change and load corresponding cities
+    $('#state').change(function() {
+        let stateCode = $(this).val();
+        console.log("Selected State:", stateCode);
+
+        if (stateCode) {
+            $.ajax({
+                url: 'get_cities.php',
+                type: 'POST',
+                data: { state_code: stateCode },
+                success: function(response) {
+                    console.log("Cities Loaded:", response);
+                    let selectedValues = $('#city').val() || []; // Keep previous selections
+                    $('#city').html(response).val(selectedValues).trigger('change');
+                },
+                error: function() {
+                    console.error("Error loading cities.");
+                }
+            });
+        } else {
+            $('#city').html('').trigger('change'); // Reset cities dropdown
+        }
+    });
+    });
+</script>

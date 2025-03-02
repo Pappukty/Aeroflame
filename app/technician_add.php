@@ -1,6 +1,11 @@
 <?php
 include_once './includes/header.php';
 include_once './class/fileUploader.php';
+if ($_REQUEST['state_id']) {
+    $state = $_REQUEST['state_id'];
+} else {
+    $state = "38";
+}
 error_reporting(1);
 
 if (isset($_REQUEST['submit'])) {
@@ -13,11 +18,15 @@ if (isset($_REQUEST['submit'])) {
     $performance_metrics = $xssClean->clean_input($_REQUEST['performance_metrics']);
     $dob = $xssClean->clean_input($_REQUEST['dob']);
     $address = $xssClean->clean_input($_REQUEST['address']);
+    $country = $xssClean->clean_input($_REQUEST['country']);
+    $state = $xssClean->clean_input($_REQUEST['state']);
+    $area = $xssClean->clean_input($_REQUEST['assigned_areas']);
+
     $experience = $xssClean->clean_input($_REQUEST['experience']);
     $log_date = date("Y-m-d H:i:s");
 
     // Handle assigned areas as an array
-    $assigned_areas = isset($_REQUEST['assigned_areas']) ? $_REQUEST['assigned_areas'] : [];
+    $assigned_areas = isset($_REQUEST['city']) ? $_REQUEST['city'] : [];
     $assigned_areas_str = implode(',', array_map([$xssClean, 'clean_input'], $assigned_areas));
 
     // Check if it's an update operation
@@ -33,8 +42,8 @@ if (isset($_REQUEST['submit'])) {
         $employee_id = $row['employee_id']; // Keep the existing employee ID
 
         // Update existing technician
-        $stmt = $DatabaseCo->dbLink->prepare("UPDATE technician SET technician_name=?,email=?,dob=?, skills=?, contact=?, assigned_areas=?, availability_status=?, work_schedule=?, performance_metrics=?,address=?,experience=? WHERE id=?");
-        $stmt->bind_param("sssssssssssi", $technician_name, $email, $dob, $skills, $contact, $assigned_areas_str, $availability_status, $work_schedule, $performance_metrics, $address, $experience, $d_id);
+        $stmt = $DatabaseCo->dbLink->prepare("UPDATE technician SET technician_name=?,email=?,dob=?, skills=?, contact=?, city=?, availability_status=?, work_schedule=?, performance_metrics=?,address=?,country=?,state=?,experience=?,assigned_areas=? WHERE id=?");
+        $stmt->bind_param("ssssssssssssssi", $technician_name, $email, $dob, $skills, $contact, $assigned_areas_str, $availability_status, $work_schedule, $performance_metrics, $address, $country, $state, $experience, $area, $d_id);
         $stmt->execute();
     } else {
         // Generate a new unique Employee ID
@@ -46,12 +55,11 @@ if (isset($_REQUEST['submit'])) {
         $employee_id = "TECH" . str_pad($next_id, 3, '0', STR_PAD_LEFT); // Format: TECH001, TECH002, etc.
 
         // Insert new technician
-        $stmt = $DatabaseCo->dbLink->prepare("INSERT INTO technician (employee_id, technician_name, email,dob, skills, contact, assigned_areas, availability_status, work_schedule, performance_metrics, log_date,address,experience) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssssssssss", $employee_id, $technician_name, $email, $dob, $skills, $contact, $assigned_areas_str, $availability_status, $work_schedule, $performance_metrics, $log_date, $address, $experience);
+        $stmt = $DatabaseCo->dbLink->prepare("INSERT INTO technician (employee_id, technician_name, email,dob, skills, contact, city, availability_status, work_schedule, performance_metrics, log_date,address,country,state,experience,assigned_areas) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssssssssssss", $employee_id, $technician_name, $email, $dob, $skills, $contact, $assigned_areas_str, $availability_status, $work_schedule, $performance_metrics, $log_date, $address, $country, $state, $experience, $area);
         $stmt->execute();
         $d_id = $stmt->insert_id;
     }
-
     // Handle Image Upload
     $uploadimage = new ImageUploader($DatabaseCo);
 
@@ -112,12 +120,14 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
         border-radius: 5px;
         padding: 3px 8px;
     }
+
     .select2-container--default .select2-selection--multiple .select2-selection__choice {
-    color: black !important;
-}
-.select2-selection .select2-selection--multiple{
-    color: black !important;
-}
+        color: black !important;
+    }
+
+    .select2-selection .select2-selection--multiple {
+        color: black !important;
+    }
 </style>
 <!-- Page Header -->
 <div class="page-header">
@@ -125,8 +135,8 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
         <div class="col-sm-12">
             <h3 class="page-title"><?php echo $titl; ?> Add Technician </h3>
             <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="technician_add.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="technician .php"> Technician Listing</a></li>
+                <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="technician.php"> Technician Listing</a></li>
                 <li class="breadcrumb-item active"><?php echo $titl; ?> Add Technician </li>
             </ul>
         </div>
@@ -153,7 +163,7 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
                         </div>
 
                         <div class="col-md-6">
-                            <label for="dob" class="form-label">Technician Name</label>
+                            <label for="dob" class="form-label">Date of Birth</label>
                             <input type="date" class="form-control" id="dob" name="dob" value="<?php echo $Row->dob; ?>" required>
                         </div>
 
@@ -188,22 +198,89 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
                             <input type="tel" class="form-control" maxlength="10" id="contact" name="contact" value="<?php echo $Row->contact; ?>" required>
                         </div>
                         <div class="col-md-6">
-                            <label for="Assigned_Areas" class="form-label fw-bold">Assigned Areas</label>
-                            <select class="form-control" id="Assigned_Areas" name="assigned_areas[]" multiple style="color: black;">
-    <?php
-    // Simulating edit mode: Fetch assigned areas from DB
-    $selected_areas = isset($Row->assigned_areas) ? explode(',', $Row->assigned_areas) : [];
+                            <label class="required fw-medium mb-2">Country</label>
+                            <?php
+                            $options = ''; // Initialize an empty string for options
+                            $Vselect = "SELECT * FROM countries ORDER BY name";
 
-    // Define available areas
-    $areas = ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Erode"];
+                            // Execute the SQL query and handle errors
+                            $VSQL_STATEMENT = mysqli_query($DatabaseCo->dbLink, $Vselect);
+                            if (!$VSQL_STATEMENT) {
+                                die("Database query failed: " . mysqli_error($DatabaseCo->dbLink));
+                            }
 
-    foreach ($areas as $area) {
-        $selected = in_array($area, $selected_areas) ? "selected" : "";
-        echo "<option value=\"$area\" $selected style='color: black;'>$area</option>";
-    }
-    ?>
-</select>
+                            // Fetch each row and append to the $options string
+                            foreach (mysqli_fetch_all($VSQL_STATEMENT, MYSQLI_ASSOC) as $VRow) {
+                                // Check if the current row should be marked as selected
+                                $isSelected = ($VRow['id'] === $Row->country) ? 'selected' : '';
+                                $options .= "<option value='{$VRow['id']}' $isSelected>{$VRow['name']}</option>";
+                            }
+                            ?>
 
+                            <select class="form-control mb-3" name="country" id="country">
+                                <option selected disabled>Select Country</option>
+                                <?php echo $options; // Output all options 
+                                ?>
+                            </select>
+
+                        </div>
+                        <div class="col-md-6">
+                            <label for="Assigned_Areas" class="form-label fw-bold">State</label>
+
+
+
+                            <select class="form-control mb-3" name="state" id="state">
+                                <option selected disabled>Select State</option>
+                                <?php
+                                // Load states based on the selected country
+                                $state = isset($Row->state) ? $Row->state : ''; // Current state code
+
+                                $stateQuery = "SELECT * FROM states WHERE country_id = '$Row->country' ORDER BY name";
+                                $stateResult = mysqli_query($DatabaseCo->dbLink, $stateQuery);
+                                while ($stateRow = mysqli_fetch_object($stateResult)) {
+                                    $selected = ($stateRow->id == $state) ? 'selected' : '';
+                                    echo "<option value='{$stateRow->id}' $selected>{$stateRow->name}</option>";
+                                }
+
+                                ?>
+                            </select>
+
+
+                        </div>
+                        <div class="col-md-6">
+                            <label class="required fw-medium mb-2">City</label>
+                            <?php
+                            $options = '';
+
+                            // Fetch existing selected city IDs (comma-separated)
+                            $currentCities = isset($Row->city) ? explode(',', $Row->city) : [];
+                         
+                            // Fetch cities based on the state selection
+                            $cityQuery = "SELECT * FROM `cities` 
+                            WHERE id != '0' AND state_id = '$state' 
+                               ORDER BY id DESC";
+                            $cityResult = mysqli_query($DatabaseCo->dbLink, $cityQuery);
+
+                            if (!$cityResult) {
+                                die("Database query failed: " . mysqli_error($DatabaseCo->dbLink));
+                            }
+
+                            // Generate city dropdown options
+                            foreach (mysqli_fetch_all($cityResult, MYSQLI_ASSOC) as $cityRow) {
+                                $selected = in_array($cityRow['id'], $currentCities) ? 'selected' : '';
+                                $options .= "<option value='{$cityRow['id']}' $selected>{$cityRow['name']}</option>";
+                            }
+                            
+                            ?>
+
+                            <select class="form-control mb-3" name="city[]" id="city" multiple>
+                                <?php echo $options; ?>
+                            </select>
+
+                        </div>
+                        <div class="col-md-6">
+                            <label for="assigned_areas" class="form-label">Area</label>
+                            <input type="text" class="form-control" id="assigned_areas" name="assigned_areas" value="<?php echo $Row->assigned_areas; ?>">
                         </div>
 
 
@@ -260,12 +337,7 @@ include_once './includes/footer.php';
     });
 </script>
 <script>
-    $(document).ready(function() {
-        $('#Assigned_Areas').select2({
-            placeholder: "Select Assigned Areas",
-            allowClear: true
-        });
-    });
+
 </script>
 
 <style>
@@ -279,3 +351,109 @@ include_once './includes/footer.php';
         margin-top: 0.25rem;
     }
 </style>
+
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBG-RZCzEuy7JMyMu4ykftt5ooRcCeqhKY&loading=async&libraries=places&callback=initMap&callback=initAutocomplete"></script>
+<script type="text/javascript">
+    const selectedCities = [];
+
+    function initAutocomplete() {
+        const map = new google.maps.Map(document.getElementById("map"), {
+            center: {
+                lat: -33.8688,
+                lng: 151.2195
+            },
+            zoom: 13,
+            mapTypeId: "roadmap",
+        });
+
+        const input3 = document.getElementById("pickup-input");
+        const searchBox3 = new google.maps.places.SearchBox(input3);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input3);
+
+        const input = document.getElementById("city-input");
+        const searchResults = document.getElementById("search-results");
+        const searchBox = new google.maps.places.SearchBox(input);
+
+        searchBox.addListener('places_changed', function() {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
+
+            places.forEach(place => {
+                if (place.name && !selectedCities.includes(place.name)) {
+                    addTag(place.name); // Add place to the tag list
+                }
+            });
+
+            input.value = ''; // Clear the input field
+        });
+
+        // Hide the search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchResults.contains(e.target) && e.target !== input) {
+                searchResults.style.display = 'none';
+            }
+        });
+    }
+
+    window.initAutocomplete = initAutocomplete;
+</script>
+<script>
+    $(document).ready(function() {
+        // Load states when a country is selected
+        $('#country').change(function() {
+            let countryCode = $(this).val();
+            console.log("Selected Country:", countryCode);
+
+            if (countryCode) {
+                $.ajax({
+                    url: 'get_states.php',
+                    type: 'POST',
+                    data: {
+                        country_code: countryCode
+                    },
+                    success: function(response) {
+                        console.log("States Loaded:", response);
+                        $('#state').html(response);
+                        $('#city').html('').trigger('change'); // Reset city dropdown
+                    },
+                    error: function() {
+                        console.error("Error loading states.");
+                    }
+                });
+            } else {
+                $('#state, #city').html('').trigger('change'); // Reset both if no country is selected
+            }
+        });
+
+        // Load cities when a state is selected
+        $('#city').select2({
+        placeholder: "Select City",
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Handle state change and load corresponding cities
+    $('#state').change(function() {
+        let stateCode = $(this).val();
+        console.log("Selected State:", stateCode);
+
+        if (stateCode) {
+            $.ajax({
+                url: 'get_cities.php',
+                type: 'POST',
+                data: { state_code: stateCode },
+                success: function(response) {
+                    console.log("Cities Loaded:", response);
+                    let selectedValues = $('#city').val() || []; // Keep previous selections
+                    $('#city').html(response).val(selectedValues).trigger('change');
+                },
+                error: function() {
+                    console.error("Error loading cities.");
+                }
+            });
+        } else {
+            $('#city').html('').trigger('change'); // Reset cities dropdown
+        }
+    });
+    });
+</script>

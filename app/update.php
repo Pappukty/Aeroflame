@@ -48,11 +48,13 @@ if(isset($_POST['id']) && isset($_POST['status'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status_id'], $_POST['availability_status'])) {
     ob_clean(); // Remove unwanted output
 
+  
+
     $id = intval($_POST['status_id']);
     $status = $_POST['availability_status'];
 
     // Validate status value
-    if (!in_array($status, ['Active', 'Inactive'])) {
+    if (!in_array($status, ['Active', 'Inactive', 'Completed'])) { // Include 'Completed' if needed
         echo json_encode(['status' => 'error', 'message' => 'Invalid status value!']);
         exit;
     }
@@ -75,11 +77,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['status_id'], $_POST['
     }
 
     $stmt->close();
-    $DatabaseCo->dbLink->close();
+
 } else {
     ob_clean();
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request method!']);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method or missing parameters!']);
 }
+
+
 
 
 if (isset($_POST['technician_id'])) {
