@@ -1,5 +1,6 @@
 <?php
 error_reporting(0);
+session_start();
 include_once './class/databaseConn.php';
 include_once './lib/requestHandler.php';
 $DatabaseCo = new DatabaseConn();
@@ -8,23 +9,65 @@ include_once './class/XssClean.php';
 $xssClean = new xssClean();
 
 if (isset($_REQUEST['login'])) {
-	$username = isset($_POST['username']) ? strtolower(trim($_POST['username'])) : "";
-	$password = isset($_POST['password']) ? trim($_POST['password']) : "";
+    // Retrieve and sanitize input
+    $username = isset($_POST['username']) ? strtolower(trim($_POST['username'])) : "";
+    $password = isset($_POST['password']) ? trim($_POST['password']) : "";
 
-	$STATUS_MESSAGE = "";
+    // Initialize variables
+    $STATUS_MESSAGE = "";
+    $table = "";
+    
+    // Determine user role based on username
+    if ($username === "admin") {
+        $table = "admin"; // Single Admin
+    } else {
+        // Check if the user exists in the 'staff' table
+        $staff_check_query = "SELECT * FROM staff WHERE LOWER(username)='" . $DatabaseCo->dbLink->real_escape_string($username) . "'";
+        $staff_result = $DatabaseCo->dbLink->query($staff_check_query);
 
-	$query = "select * from admin where ( LOWER(username)='" . $username . "') and password='" . md5($password) . "'";
+        if (mysqli_num_rows($staff_result) > 0) {
+            $table = "staff"; // Multiple Staff Members
+        } else {
+            $table = "supervisor"; // Default to Supervisor if not Admin or Staff
+        }
+    }
 
-	$SQL_STATEMENT = $DatabaseCo->dbLink->query($query);
-	$num = mysqli_num_rows($SQL_STATEMENT);
-	if ($num > 0) {
-		$Row = mysqli_fetch_object($SQL_STATEMENT);
-		$_SESSION["user_id"] = $Row->id;
-		echo "<script>window.location='index.php'</script>";
-	} else {
-		echo "<script>window.location='login.php?failed=1'</script>";
-	}
+    // Authenticate user from the selected table with appropriate password method
+    if ($table === "admin") {
+        $query = "SELECT * FROM admin WHERE LOWER(username)='" . $DatabaseCo->dbLink->real_escape_string($username) . "' 
+                  AND password='" . md5($password) . "'";
+    } else {
+        $query = "SELECT * FROM $table WHERE LOWER(username)='" . $DatabaseCo->dbLink->real_escape_string($username) . "' 
+                  AND password='" . base64_encode($password) . "'";
+    }
+
+    $SQL_STATEMENT = $DatabaseCo->dbLink->query($query);
+    $num = mysqli_num_rows($SQL_STATEMENT);
+
+    if ($num > 0) {
+        // Fetch user details
+        $Row = mysqli_fetch_object($SQL_STATEMENT);
+
+        // Store session variables
+        $_SESSION["user_id"] = $Row->id;
+        $_SESSION["role"] = $table;
+
+        // Store staff ID if the user is staff
+        if ($table === "staff") {
+            $_SESSION["staff_id"] = $Row->staff_id;
+        }
+
+        // Redirect user based on role
+        echo "<script>window.location='index.php';</script>";
+        exit();
+    } else {
+        // Redirect to login page with error
+        echo "<script>window.location='login.php?failed=1';</script>";
+        exit();
+    }
 }
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

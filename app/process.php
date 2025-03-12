@@ -41,3 +41,21 @@ if($_REQUEST['form_action'] == 'DeleteCity') {
     $did = $xssClean->clean_input($_REQUEST['delid']);
     $DatabaseCo->dbLink->query("DELETE FROM `cities` WHERE `id`='$did'");
 }
+if($_REQUEST['form_action'] == 'DeleteOrder') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `purchase_order` WHERE `id`='$did'");
+}
+
+if($_REQUEST['form_action'] == 'DeleteSpares') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `issued_spares` WHERE `id`='$did'");
+} 
+
+if($_REQUEST['form_action'] == 'DeleteStock_Audit') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `stock_audits` WHERE `id`='$did'");
+} 
+if($_REQUEST['form_action'] == 'Deleteamc') {
+    $did = $xssClean->clean_input($_REQUEST['delid']);
+    $DatabaseCo->dbLink->query("DELETE FROM `amc_contracts` WHERE `id`='$did'");
+} 

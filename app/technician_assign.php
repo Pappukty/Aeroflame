@@ -4,32 +4,7 @@ session_start(); // Start the session
 include_once './includes/header.php';
 error_reporting(1);
 // Check if the user is logged in
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-
-    $customer_id = $_POST['customer_id'];
-    $technician_id = $_POST['technician_id'];
-    $status = $_POST['status_process'];
-
-    // Ensure valid input
-    if (!empty($customer_id) && !empty($technician_id)) {
-        // Update work schedule
-        $sql = "UPDATE resolve SET technician_id = ?, status_process = ? WHERE customer_id = ?";
-        $stmt = $DatabaseCo->dbLink->prepare($sql);
-        $stmt->bind_param("isi", $technician_id, $status, $customer_id);
-
-        if ($stmt->execute()) {
-            echo json_encode(["status" => "success", "message" => "Work schedule updated successfully!"]);
-        } else {
-            echo json_encode(["status" => "error", "message" => "Error updating work schedule."]);
-        }
-
-        $stmt->close();
-    } else {
-        echo json_encode(["status" => "error", "message" => "Please select a technician."]);
-    }
-}
-
+$staff = $_SESSION['staff_id'];
 
 ?>
 
@@ -72,10 +47,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <th class="w-15">employee_id</th>
                                 <th class="w-15">technician_name</th>
 
-                                <!-- <th class="w-15">Type</th> -->
+                                <th class="w-15">Performance Rating</th>
                                 <th class="w-25">Status</th>
-                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
                                 <th class="w-25">Action</th>
+                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+                               
                                 <!-- <?php } ?> -->
                             </tr>
                         </thead>
@@ -95,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     // Ensure we handle multiple city selections correctly
                                     $cityIds = implode("','", $selectedCities); // Convert array to a string for SQL query
                                     $sql3 = mysqli_query($DatabaseCo->dbLink, "SELECT * FROM cities WHERE id IN ('$cityIds')");
-                                    
+                               
                                     $cityNames = [];
 
                                     while ($res3 = mysqli_fetch_object($sql3)) {
@@ -129,23 +105,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                             echo is_array($assigned_areas) ? implode(', ', $assigned_areas) : htmlspecialchars($mergedCityNames);
                                             ?>
                                         </td>
-                                        <td>____</td>
-                                        <td>____</td>
+                                        <td><?php echo htmlspecialchars($Row->technician_id); ?></td>
+                                        <td><?php echo htmlspecialchars($res4->technician_name); ?></td>
                                         <!-- Availability Status Button -->
+                                                    <td>4.5/5 ⭐</td>
                                         <td>
                                             <button class="btn 
-                    <?php
-
-                                    if ($Row->status_process == 'completed') {
-                                        echo 'btn-success'; // Green button for completed
-                                    } elseif ($Row->status_process == 'pending') {
-                                        echo 'btn-warning text-dark'; // Yellow button for pending
-                                    } elseif ($Row->status_process == 'Filled') {
-                                        echo 'btn-primary'; // Blue button for filled
-                                    } else {
-                                        echo 'btn-secondary'; // Default gray button
-                                    }
-                    ?>">
+                                            <?php
+           if ($Row->status_process == 'Completed') {
+            echo 'btn btn-success'; // Green button for completed
+        } elseif ($Row->status_process == 'pending') {
+            echo 'btn btn-warning text-dark'; // Yellow button for pending
+        } elseif ($Row->status_process == 'In Progress') {
+            echo 'btn btn-info'; // Blue button for in-progress
+        } elseif ($Row->status_process == 'Open') {
+            echo 'btn btn-primary'; // Blue button for in-progress
+        } elseif ($Row->status_process == 'Filled') {
+            echo 'btn btn-secondary'; // Light blue for filled
+        } else {
+            echo 'btn btn-dark'; // Default gray button
+        }
+        ?>">
                                                 <?php echo ucfirst(htmlspecialchars($Row->status_process)); ?>
                                             </button>
                                         </td>
@@ -197,10 +177,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                                         <div class="dropdown-divider"></div>
                                                         <!-- Work Schedule Button -->
                                                         <a class="dropdown-item work-schedule-btn" href="javascript:void(0);"
-                                                            data-id="<?php echo htmlspecialchars($Row->city . '&&' . $Row->consumer_id); ?>"
+                                                            data-id="<?php echo htmlspecialchars($Row->city) . '&&' . htmlspecialchars($Row->index_id) . '&&' . htmlspecialchars($staff) . '&&' . htmlspecialchars($Row->customer_name) . '&&' . htmlspecialchars($Row->address) . '&&' . htmlspecialchars($Row->mobile_number); ?>"
                                                             data-bs-toggle="modal" data-bs-target="#workScheduleModal">
                                                             Work Schedule
                                                         </a>
+
 
 
 
@@ -265,10 +246,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </div>
                 <div class="modal-body">
                     <label for="customer_name">Assigned Customers:</label>
-                    <select class="form-control" name="technician_id" id="customer_name" required>
+                    <select class="form-control" name="technician_id" id="technician_id" required>
                         <option value="" disabled selected>Select Technician</option>
                     </select>
                     <input type="hidden" name="customer_id" id="customer_id">
+                    <input type="hidden" name="staff_id" id="staff_id">
+                    <input type="hidden" name="address" id="address">
+                    <input type="hidden" name="customer_name" id="customer_name">
+                    <input type="hidden" name="mobile_number" id="customer_number">
                     <input type="hidden" name="status_process" value="In-Progress">
                     <button type="submit" class="btn btn-primary mt-3">Assign</button>
                 </div>
@@ -292,13 +277,22 @@ include_once './includes/footer.php';
 <script>
     $(document).ready(function() {
         $(".work-schedule-btn").click(function() {
-            var dataId = $(this).data("id"); // Example format: "1845 && 5678"
+            var dataId = $(this).data("id"); // Example format: "3659,3683 && 5678"
             var values = dataId.split("&&");
-            var area_id = values[0].trim();
+            var area_id = values[0].trim(); // "3659,3683"
             var customer_id = values[1].trim();
-
-            $("#customer_id").val(customer_id); // Assign customer ID to hidden input
-            $("#customer_name").find("option:not(:first)").remove(); // Clear previous options
+            var staff_id = values[2].trim();
+            var customer_name = values[3].trim();
+            var address = values[4].trim();
+            var customer_number = values[5].trim();
+            console.log(area_id);
+            $("#staff_id").val(staff_id);
+            $("#customer_name").val(customer_name);
+            $("#address").val(address);
+            $("#customer_number").val(customer_number);
+            $("#customer_id").val(customer_id);
+          
+            $("#customer_name").find("option:not(:first)").remove();
 
             $.ajax({
                 url: "fetch_technicians.php",
@@ -309,54 +303,84 @@ include_once './includes/footer.php';
                 dataType: "json",
                 success: function(response) {
                     if (response.status === "success") {
-                        $.each(response.data, function(index, technician) {
-                            $("#customer_name").append(
-                                `<option value="${technician.id}">${technician.name}</option>`
-                            );
-                        });
+                        let mergedKey = Object.keys(response.data)[0]; // Get first key (e.g., "3659")
+                        let technicians = response.data[mergedKey] || [];
+
+                        if (technicians.length > 0) {
+                            $.each(technicians, function(index, technician) {
+                                $("#technician_id").append(
+                                    `<option value="${technician.employee_id}">${technician.name}</option>`
+                                );
+                            });
+                        } else {
+                            toastr.warning("No technicians found for the selected area.");
+                        }
                     } else {
-                        alert("Error: " + response.message);
+                        toastr.error(response.message || "Failed to fetch technicians.");
                     }
                 },
                 error: function(xhr) {
-                    console.log("XHR Error:", xhr.responseText);
-                    alert("Error fetching technicians.");
+                    console.error("XHR Error:", xhr.responseText);
+                    toastr.error("An error occurred while fetching technicians. Please try again.");
                 }
             });
         });
+
+
 
         // Handle form submission
         $("#workScheduleForm").submit(function(e) {
             e.preventDefault();
 
-            var technician_id = $("#customer_name").val();
+            var technician_id = $("#technician_id").val();
             var customer_id = $("#customer_id").val();
+            var staff_id = $("#staff_id").val();
+            var customer_name = $("#customer_name").val();
+            var address = $("#address").val();
+            var customer_number = $("#customer_number").val();
 
             if (!technician_id) {
-                alert("Please select a technician.");
+                toastr.warning("Please select a technician.");
                 return;
             }
 
             $.ajax({
-                url: "technician_assign.php",
+                url: "assign_update.php",
                 type: "POST",
                 data: {
                     customer_id: customer_id,
+                    staff_id: staff_id,
                     technician_id: technician_id,
+                    customer_name: customer_name,
+                    address: address,
+                    customer_number: customer_number,
+                 
                     status_process: "In-Progress"
                 },
                 dataType: "json",
                 success: function(response) {
+                    toastr.options = {
+                        closeButton: true,
+                        progressBar: true,
+                        showMethod: "fadeIn",
+                        hideMethod: "fadeOut",
+                        timeOut: 3000,
+                        positionClass: "toast-top-right"
+                    };
+
                     if (response.status === "success") {
-                        alert(response.message);
+                        toastr.success(response.message || "Work schedule updated successfully!");
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
                         $("#workScheduleModal").modal("hide"); // Close modal
                     } else {
-                        alert("Error: " + response.message);
+                        toastr.error(response.message || "Something went wrong, please try again.");
                     }
                 },
-                error: function(xhr) {
-                    console.log("XHR Error:", xhr.responseText);
-                    alert("Error assigning technician.");
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", xhr.responseText, status, error);
+                    toastr.error("An error occurred while assigning the technician. Please try again.");
                 }
             });
         });
@@ -400,7 +424,7 @@ include_once './includes/footer.php';
         console.log("Updating ID:", id, "New Status:", newStatus);
 
         $.ajax({
-            url: 'update.php',
+            url: 'update_technician.php',
             type: 'POST',
             data: {
                 status_id: id,

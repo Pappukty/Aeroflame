@@ -97,7 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           '$sr_state', '$ldr', '$type', '$escalation_level', '$escalation_date', '$sr_district', '$resolution_category', 
           '$status', '$channel_reference_id', '$response_date', '$partner_name', '$sub_category', '$receiver_social_id', 
           '$assigned_to', '$resolved_date', '$external_party', '$oate', '$reverse_description', '$resolution_remarks', 
-          '$complaint', '$redirected_grievance_center', '$vigilance_flag', '$mdg', 'pending','$assigned_areas','$country','$state','$city'
+          '$complaint', '$redirected_grievance_center', '$vigilance_flag', '$mdg', 'Open','$assigned_areas','$country','$state','$city'
       )";
 
     if ($DatabaseCo->dbLink->query($sql) === TRUE) {

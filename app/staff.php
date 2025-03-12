@@ -42,10 +42,10 @@ include_once './includes/header.php';
                                 <th class="w-20">Contact</th>
                                 <th class="w-25">Email</th>
 
-
+                                <th class="w-25">Action</th>
                                 <!-- <th class="w-25">Status</th> -->
                                 <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                                <th class="w-25">Action</th>
+                              
                                 <!-- <?php } ?> -->
                             </tr>
                         </thead>
@@ -76,7 +76,7 @@ include_once './includes/header.php';
                                         <td><?php echo htmlspecialchars($Row->staff_id); ?></td>
 
                                         <!-- Staff Name -->
-                                        <td><?php echo htmlspecialchars($Row->name); ?></td>
+                                        <td><?php echo htmlspecialchars($Row->username); ?></td>
 
                                         <!-- Contact -->
                                         <td><?php echo htmlspecialchars($Row->contact); ?></td>

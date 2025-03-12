@@ -1,4 +1,6 @@
-<?php ob_start();
+<?php
+ob_start();
+
 error_reporting(0);
 include_once './class/databaseConn.php';
 include_once './lib/requestHandler.php';
@@ -7,11 +9,62 @@ $DatabaseCo = new DatabaseConn();
 include_once './class/XssClean.php';
 $xssClean = new xssClean();
 
-if (($_SESSION['user_id']) == '') {
+// Check if user is logged in
+if (empty($_SESSION['user_id'])) {
   echo "<script>window.location='login.php';</script>";
   exit();
 }
+
+// Initialize default values
+$user_role = "Unknown";
+$user_name = "Guest";
+$user_email = "No Email";
+$user_photos = ""; // Default empty photo
+
+// Check if the session role is set
+if (isset($_SESSION['role'])) {
+  switch ($_SESSION['role']) {
+    case 'admin':
+      // Admin logic
+      $user_role = "Admin";
+      $user_name = "Aeroflame"; // Default admin name
+      $user_email = "Aeroflame@gmail.com"; // Default admin email
+      break;
+
+    case 'staff':
+      // Staff logic - Fetch staff details dynamically
+      $staff_query = $DatabaseCo->dbLink->query("SELECT username, photo, email FROM `staff` WHERE staff_id='" .
+        $DatabaseCo->dbLink->real_escape_string($_SESSION["staff_id"]) . "'");
+      $staff_data = mysqli_fetch_assoc($staff_query);
+
+      if ($staff_data) {
+        $user_role = "Staff";
+        $user_name = $staff_data['username'] ?? "Unknown Staff"; // Staff name
+        $user_email = $staff_data['email'] ?? "No Email"; // Staff email
+        $user_photos = $staff_data['photo'] ?? ""; // Staff photo
+      }
+      break;
+
+    case 'supervisor':
+      // Supervisor logic - Fetch details dynamically (if stored in a separate table)
+      $supervisor_query = $DatabaseCo->dbLink->query("SELECT username, photo, email FROM `supervisor` WHERE supervisor_id='" .
+        $DatabaseCo->dbLink->real_escape_string($_SESSION["supervisor_id"]) . "'");
+      $supervisor_data = mysqli_fetch_assoc($supervisor_query);
+
+      if ($supervisor_data) {
+        $user_role = "Supervisor";
+        $user_name = $supervisor_data['username'] ?? "Unknown Supervisor"; // Supervisor name
+        $user_email = $supervisor_data['email'] ?? "No Email"; // Supervisor email
+        $user_photos = $supervisor_data['photo'] ?? ""; // Supervisor photo
+      }
+      break;
+  }
+}
+
+// Output user email (for testing)
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -39,6 +92,7 @@ if (($_SESSION['user_id']) == '') {
   <link href="assets/css/sidebar-menu.css" rel="stylesheet" />
   <link href="../../css/style2.css">
   <!-- Custom Style-->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="assets/css/app-style.css" rel="stylesheet" />
   <link href="assets/plugins/datatable/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
@@ -126,7 +180,7 @@ if (($_SESSION['user_id']) == '') {
         <i class="zmdi zmdi-money gold-icon"></i> <span>Tickets s</span>
         </a> -->
         </li>
-
+        <li class="sidebar-header">Ticket Management</li>
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
@@ -139,18 +193,29 @@ if (($_SESSION['user_id']) == '') {
         </li>
         <li>
           <a href="javaScript:void();" class="waves-effect">
-          <i class="bi bi-person-workspace gold-icon mr-2" style="font-size: 19px;"></i> <span>Assign Technician</span>
 
-
+            <i class="zmdi zmdi-comment-text" style="font-size: 19px;"></i>
+            <span>Customer Feedback</span>
           </a>
           <ul class="sidebar-submenu">
-            <li><a href="technician_assign.php"><i class="zmdi zmdi-dot-circle-alt"></i>Technician Assign</a></li>
-
+            <li><a href="view_feedback.php"><i class="zmdi zmdi-dot-circle-alt"></i>Feedback View</a></li>
+          
           </ul>
         </li>
 
 
+        <li class="sidebar-header">Annual Maintenance Contract</li>
+        <li>
+          <a href="javaScript:void();" class="waves-effect">
 
+            <i class="zmdi zmdi-ticket-star gold-icon" style="font-size: 19px;"></i> <span>Annual Maintenance</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="list_amc.php"><i class="zmdi zmdi-dot-circle-alt"></i> All AMC Contracts</a></li>
+            <li><a href="create_amc.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add AMC Contract  </a></li>
+          </ul>
+        </li>
+     
 
 
         <li>
@@ -167,7 +232,7 @@ if (($_SESSION['user_id']) == '') {
         <!-- <li><a href="#">
             <i class="zmdi zmdi-store gold-icon" style="font-size: 19px;"></i> Vendors
           </a></li> -->
-
+        <li class="sidebar-header">Spares Inventory Management</li>
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
@@ -177,8 +242,41 @@ if (($_SESSION['user_id']) == '') {
             <li><a href="inventory_list.php"><i class="zmdi zmdi-dot-circle-alt"></i>All Inventory</a></li>
             <li><a href="inventory_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Inventory </a></li>
           </ul>
+
+
+        </li>
+        <li>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="zmdi zmdi-store gold-icon" style="font-size: 19px;"></i> <span>Purchase Management</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="create_order.php"><i class="zmdi zmdi-plus-circle"></i> Add Purchase Order</a></li>
+            <li><a href="view_orders.php"><i class="zmdi zmdi-receipt"></i> Purchase Orders</a></li>
+            <li><a href="low_stock_alert.php"><i class="zmdi zmdi-alert-circle"></i> Low Stock Alert</a></li>
+          </ul>
         </li>
 
+        <li>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="zmdi zmdi-assignment gold-icon" style="font-size: 19px;"></i> <span>Issue Tracking</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="assigning_spares.php"><i class="zmdi zmdi-wrench"></i> Create Issued Spare</a></li>
+            <li><a href="issued_spares_list.php"><i class="zmdi zmdi-format-list-bulleted"></i> Issued Spares List</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="zmdi zmdi-check-circle gold-icon" style="font-size: 19px;"></i> <span>Stock Auditing</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="add_audit.php"><i class="zmdi zmdi-file-plus"></i> Add Stock Audit</a></li>
+            <li><a href="stock_audit_list.php"><i class="zmdi zmdi-collection-item"></i> Stock Audit List</a></li>
+          </ul>
+        </li>
+
+        <li class="sidebar-header">Technician Management</li>
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
@@ -187,6 +285,17 @@ if (($_SESSION['user_id']) == '') {
           <ul class="sidebar-submenu">
             <li><a href="technician.php"><i class="zmdi zmdi-dot-circle-alt"></i>All Technician</a></li>
             <li><a href="technician_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Technician </a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="javaScript:void();" class="waves-effect">
+            <i class="bi bi-person-workspace gold-icon mr-2" style="font-size: 19px;"></i> <span>Assign Technician</span>
+
+
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="technician_assign.php"><i class="zmdi zmdi-dot-circle-alt"></i>Technician Assign</a></li>
+
           </ul>
         </li>
         <!-- <li>
@@ -199,6 +308,7 @@ if (($_SESSION['user_id']) == '') {
 
           </ul>
         </li> -->
+        <li class="sidebar-header">Supervisor Management</li>
         <li>
           <a href="javaScript:void();" class="waves-effect">
 
@@ -210,6 +320,26 @@ if (($_SESSION['user_id']) == '') {
             <li><a href="staff_add.php"><i class="zmdi zmdi-dot-circle-alt"></i>Add New Staff </a></li>
           </ul>
         </li>
+        <li>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="zmdi zmdi-assignment-check gold-icon mr-2" style="font-size: 19px;"></i>
+            <span>Ticket Resolutions</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="ticket_resolutions.php"><i class="zmdi zmdi-format-list-bulleted"></i> All Resolutions</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="zmdi zmdi-trending-up gold-icon mr-2" style="font-size: 19px;"></i>
+            <span>Staff KPI Tracking</span>
+          </a>
+          <ul class="sidebar-submenu">
+            <li><a href="staff_track.php"><i class="zmdi zmdi-bar-chart"></i> Staff KPIs</a></li>
+          </ul>
+        </li>
+
         <li class="sidebar-header">Master Management</li>
         <!-- <li>
         <a href="javaScript:void();" class="waves-effect">
@@ -285,10 +415,10 @@ if (($_SESSION['user_id']) == '') {
           <li><a href="videogallerycategory.php"><i class="zmdi zmdi-dot-circle-alt"></i>Video Gallery Categories</a></li>
         </ul>
        </li> -->
-       <li>
+        <li>
           <a href="javaScript:void();" class="waves-effect">
 
-          <i class="fa fa-globe" style="font-size: 19px;"></i>
+            <i class="fa fa-globe" style="font-size: 19px;"></i>
             <span>Country</span>
           </a>
           <ul class="sidebar-submenu">
@@ -297,12 +427,12 @@ if (($_SESSION['user_id']) == '') {
           </ul>
         </li>
         <li>
-        <a href="javascript:void(0);" class="waves-effect">
-        <i class="bi bi-map gold-icon mr-2" style="font-size: 19px;"></i>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="bi bi-map gold-icon mr-2" style="font-size: 19px;"></i>
 
 
-    <span>State</span>
-</a>
+            <span>State</span>
+          </a>
 
           <ul class="sidebar-submenu">
             <li><a href="state.php"><i class="zmdi zmdi-dot-circle-alt"></i>All State</a></li>
@@ -310,13 +440,13 @@ if (($_SESSION['user_id']) == '') {
           </ul>
         </li>
         <li>
-        <a href="javascript:void(0);" class="waves-effect">
-        <i class="bi bi-buildings gold-icon mr-2" style="font-size: 19px;"></i>
+          <a href="javascript:void(0);" class="waves-effect">
+            <i class="bi bi-buildings gold-icon mr-2" style="font-size: 19px;"></i>
 
 
 
-    <span>City</span>
-</a>
+            <span>City</span>
+          </a>
 
 
 
@@ -349,21 +479,28 @@ if (($_SESSION['user_id']) == '') {
         <ul class="navbar-nav align-items-center right-nav-link">
           <li class="nav-item">
             <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" data-toggle="dropdown" href="#">
-              <span class="user-profile"><img src="assets/images/logo.png" class="img-circle" alt="user avatar"></span>
+              <?php if ($user_role === 'Admin'): ?>
+                <span class="user-profile"><img src="assets/images/logo.png" class="img-circle" alt="user avatar"></span>
+              <?php else: ?>
+                <span class="user-profile"><img src="../uploads/staff/<?php echo ucfirst($user_photos); ?>" class="img-circle" alt="user avatar"></span>
+              <?php endif; ?>
             </a>
             <ul class="dropdown-menu dropdown-menu-right">
               <li class="dropdown-item user-details">
                 <a href="javaScript:void();">
                   <div class="media">
-                    <div class="avatar"><img class="align-self-start mr-3" src="assets/images/logo.png" alt="user avatar"></div>
+                    <?php if ($user_role === 'Admin'): ?>
+                      <div class="avatar"><img class="align-self-start mr-3" src="assets/images/logo.png" alt="user avatar"></div>
+                    <?php else: ?>
+                      <div class="avatar"><img class="align-self-start mr-3" src="../uploads/staff/<?php echo ucfirst($user_photos); ?>" alt="user avatar"></div>
+                    <?php endif; ?>
                     <div class="media-body">
-                      <?php if ($_SESSION["user_id"] == 1) { ?>
-                        <h6 class="mt-2 user-title">Admin</h6>
-                      <?php } else { ?>
-                        <h6 class="mt-2 user-title">user</h6>
-                      <?php } ?>
-                      <p class="user-subtitle">admin@gmail.com</p>
+                      <h6 class="mt-2 user-title"><?php echo htmlspecialchars($user_name); ?></h6>
+
+
+                      <p class="user-subtitle"><?php echo htmlspecialchars($user_email); ?></p>
                     </div>
+
                   </div>
                 </a>
               </li>

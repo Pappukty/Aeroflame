@@ -42,10 +42,10 @@ if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
 <div class="page-header">
     <div class="row">
         <div class="col-sm-8">
-            <h3 class="page-title">All Country </h3>
+            <h3 class="page-title">All City </h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
-                <li class="breadcrumb-item active">Listing of All State </li>
+                <li class="breadcrumb-item active">Listing of All City </li>
             </ul>
         </div>
         <div class="col-md-4" align="right">

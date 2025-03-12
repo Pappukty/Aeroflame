@@ -90,7 +90,7 @@ $photos = ($Row->photo !='')?'../uploads/staff/'.$Row->photo:'./assets/images/no
                     <!-- Name Info -->
                     <div class="info-block mb-3">
                       <strong>Name:</strong>
-                      <p><?php echo $Row->name; ?></p>
+                      <p><?php echo $Row->username; ?></p>
                     </div>
                     <!-- Email Info -->
                     <div class="info-block mb-3">
@@ -110,10 +110,10 @@ $photos = ($Row->photo !='')?'../uploads/staff/'.$Row->photo:'./assets/images/no
                       <p>      <?php echo $Row->designation; ?></p>
                     </div>
                     <!-- Password Info -->
-                    <!-- <div class="info-block mb-3">
+                    <div class="info-block mb-3">
                       <strong>Password:</strong>
-                      <p>      <?php echo $decoded_password; ?></p>
-                    </div> -->
+                      <p>      <?php echo base64_decode($Row->password); ?></p>
+                    </div>
                   </div>
                 </div><!-- End row -->
               </div><!-- End tab-pane -->

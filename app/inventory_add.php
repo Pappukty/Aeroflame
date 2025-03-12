@@ -6,53 +6,61 @@ ini_set('display_errors', 1);
 
 // Check if the form is submitted
 if (isset($_POST['submit'])) {
-    // Retrieve form data
-    $product_name = $_POST['product_name'];
-    $product_code = $_POST['product_code'];
-    $category = $_POST['category'];
-    $subcategory = $_POST['subcategory'];
-    $stock_quantity = $_POST['stock_quantity'];
-    $stock_status = $_POST['stock_status'];
-    $purchase_price = $_POST['purchase_price'];
-    $selling_price = $_POST['selling_price'];
-    $supplier_name = $_POST['supplier_name'];
-    $supplier_contact = $_POST['supplier_contact'];
+    // Retrieve and sanitize form data
+    $product_name = trim($_POST['product_name']);
+    $product_code = trim($_POST['product_code']);
+    $category = trim($_POST['category']);
+    $subcategory = trim($_POST['subcategory']);
+    $stock_quantity = intval($_POST['stock_quantity']);
+    $stock_status = trim($_POST['stock_status']);
+    $purchase_price = floatval($_POST['purchase_price']);
+    $selling_price = floatval($_POST['selling_price']);
+    $supplier_name = trim($_POST['supplier_name']);
+    $supplier_id = intval($_POST['supplier_id']);
+    $description = trim($_POST['description']);
+    $supplier_contact = trim($_POST['supplier_contact']);
     $product_image = "";
 
     // Check if updating or inserting a new record
-    if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
-        $d_id = $_REQUEST['id'];
+    if (!empty($_REQUEST['id']) && intval($_REQUEST['id']) > 0) {
+        $d_id = intval($_REQUEST['id']);
 
-        // Update the product details
+        // Update existing product
         $updateQuery = "UPDATE `products` 
                         SET `product_name` = ?, `product_code` = ?, `category` = ?, `subcategory` = ?, 
                             `stock_quantity` = ?, `stock_status` = ?, `purchase_price` = ?, 
-                            `selling_price` = ?, `supplier_name` = ?, `supplier_contact` = ? 
+                            `selling_price` = ?, `supplier_name` = ?, `supplier_contact` = ?, `supplier_id` = ?, `description` = ?  
                         WHERE `id` = ?";
-        
+
         $stmt = $DatabaseCo->dbLink->prepare($updateQuery);
-        $stmt->bind_param("ssssisssssi", $product_name, $product_code, $category, $subcategory, 
-                                          $stock_quantity, $stock_status, $purchase_price, 
-                                          $selling_price, $supplier_name, $supplier_contact, $d_id);
+        $stmt->bind_param(
+            "ssssisssssssi",
+            $product_name, $product_code, $category, $subcategory, 
+            $stock_quantity, $stock_status, $purchase_price, 
+            $selling_price, $supplier_name, $supplier_contact, $supplier_id, $description, $d_id
+        );
         $stmt->execute();
         $stmt->close();
     } else {
         // Insert new product
         $insertQuery = "INSERT INTO `products` (`product_name`, `product_code`, `category`, `subcategory`, 
                                                 `stock_quantity`, `stock_status`, `purchase_price`, 
-                                                `selling_price`, `supplier_name`, `supplier_contact`, `product_image`) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
+                                                `selling_price`, `supplier_name`, `supplier_contact`, `product_image`, `supplier_id`, `description`) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         $stmt = $DatabaseCo->dbLink->prepare($insertQuery);
-        $stmt->bind_param("ssssissssss", $product_name, $product_code, $category, $subcategory, 
-                                          $stock_quantity, $stock_status, $purchase_price, 
-                                          $selling_price, $supplier_name, $supplier_contact, $product_image);
+        $stmt->bind_param(
+            "ssssissssssss",
+            $product_name, $product_code, $category, $subcategory, 
+            $stock_quantity, $stock_status, $purchase_price, 
+            $selling_price, $supplier_name, $supplier_contact, $product_image, $supplier_id, $description
+        );
         $stmt->execute();
-        $d_id = $stmt->insert_id;
+        $d_id = $stmt->insert_id; // Get the inserted ID
         $stmt->close();
     }
 
-    // Handle image upload
+    // Handle image upload if provided
     if (!empty($_FILES['product_image']['name'])) {
         $uploadImage = new ImageUploader($DatabaseCo);
         $product_image = $uploadImage->upload($_FILES['product_image'], "product");
@@ -161,6 +169,11 @@ if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
             <label class="form-label">Purchase Price</label>
             <input type="number" class="form-control" name="purchase_price" value="<?php echo $Row->purchase_price; ?>" placeholder="Enter Purchase Price" required>
         </div>
+        <div class="col-md-6 col-12 mb-3">
+            <label class="form-label">Supplier Id</label>
+            <input type="number" class="form-control" name="supplier_id" value="<?php echo $Row->supplier_id; ?>" placeholder="Enter  Supplier id" required>
+        </div>
+        
         <!-- Selling Price -->
         <div class="col-md-6 col-12 mb-3">
             <label class="form-label">Selling Price</label>
@@ -180,6 +193,10 @@ if (isset($_REQUEST['id']) && $_REQUEST['id'] > 0) {
         <div class="col-md-6 col-12 mb-3">
             <label class="form-label">Product Image</label>
             <input type="file" class="form-control" name="product_image" value="<?php echo $Row->product_image; ?>">
+        </div>
+        <div class="col-md-6 col-12 mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" name="description" value="<?php echo $Row->description; ?>" placeholder="Enter  Description" required>
         </div>
         <!-- Submit Button -->
         <div class="col-12 text-center mt-3">

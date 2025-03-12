@@ -42,8 +42,9 @@ include_once './includes/header.php';
                                 <th class="w-15">Stock Quantity</th>
                                 <th class="w-15">Purchase Price</th>
                                 <th class="w-25">Supplier Name</th>
-                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
                                 <th class="w-25">Action</th>
+                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+
                                 <!-- <?php } ?> -->
                             </tr>
                         </thead>
@@ -70,7 +71,7 @@ include_once './includes/header.php';
                                         <td><?php echo $Row->purchase_price; ?></td>
 
                                         <td><?php echo ucfirst($Row->supplier_name); ?> </td>
-                                        <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+
                                         <td>
                                             <div class="d-flex align-items-center justify-content-between w-100">
                                                 <div class="d-flex align-items-center">
@@ -87,23 +88,25 @@ include_once './includes/header.php';
                                                     </a>
                                                 </div>
 
-                                                <!-- <div class="dropdown">
-     
-        <button class="btn btn-light btn-rounded dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <i class="mdi mdi-tune"></i>
-        </button>
-        <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated">
+                                                <div class="dropdown">
 
-            <a class="mt-2 modal-trigger assign-trip dropdown-item" href="javascript:void(0);" onclick="markAsCompleted('<?php echo $Row->index_id; ?>')">
-                Completed
-            </a>
-        </div>
-    </div> -->
+                                                    <button class="btn btn-light btn-rounded dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <i class="mdi mdi-tune"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-animated">
+
+                                                        <a class="dropdown-item inventory" href="javascript:void(0);"
+                                                            data-id="<?php echo htmlspecialchars($Row->product_code ) ; ?>"
+                                                            data-bs-toggle="modal" data-bs-target="#workScheduleModal">
+                                                            QR Code
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                         </td>
 
-                                        <!-- <?php } ?> -->
+
                                     </tr>
                                 <?php }
                             } else { ?>
@@ -149,7 +152,25 @@ include_once './includes/header.php';
         </div>
     </form>
 </div>
-
+<div class="modal fade" id="workScheduleModal" tabindex="-1" aria-labelledby="workScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="workScheduleModalLabel">QR Code</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span>&times;</span>
+                    </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="qrCodeContainer" class="p-3 border rounded bg-light">
+                    <h5 class="text-center">Barcode QR Code</h5>
+                    <img id="qrCodeImage" src="" alt="" class="img-fluid border p-2" />
+                </div>
+                <button class="btn btn-primary mt-3" onclick="printQRCode()">Print QR Code</button>
+            </div>
+        </div>
+    </div>
+</div>
 <?php
 include_once './includes/footer.php';
 ?>
@@ -236,15 +257,79 @@ include_once './includes/footer.php';
     }
 </script>
 
+<script>
+    $(document).ready(function() {
+        $(".inventory").click(function() {
+            var data = $(this).data("id"); // Get full data
+            console.log("Raw Data Received: " + data); // Debugging log
 
+            // Replace '&&' with a safe separator like '|'
+            var safeData = data.replace(/&&/g, '|'); 
+            var values = safeData.split('|'); // Use '|' as the separator
+            console.log("Processed Data: ", values); // Debugging log
 
+            $.ajax({
+                url: "generate_qr.php", // PHP script to generate QR code
+                type: "POST",
+                data: { qr_Barcode: safeData }, // Send cleaned-up data
+                success: function(response) {
+                    $("#qrCodeImage").attr("src", response); // Update modal image with QR code
+                },
+                error: function() {
+                    alert("Error generating QR code.");
+                }
+            });
+        });
+    });
+</script>
+<script>
+function printQRCode() {
+    var qrContainer = document.getElementById("qrCodeContainer").innerHTML;
+
+    if (qrContainer) {
+        var newWindow = window.open("", "_blank");
+        newWindow.document.write(`
+            <html>
+            <head>
+                <title>Print QR Code</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                    .qr-box { border: 2px solid #000; padding: 10px; display: inline-block; }
+                    h3 { margin-bottom: 15px; }
+                    img { width: 200px; height: 200px; }
+                    @media print {
+                        body { visibility: hidden; }
+                        .print-container { visibility: visible; position: absolute; top: 0; left: 0; width: 100%; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-container">
+                    <h3> QR Code</h3>
+                    <div class="qr-box">` + qrContainer + `</div>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    }
+                <\/script>
+            </body>
+            </html>
+        `);
+        newWindow.document.close();
+    } else {
+        alert("No QR code available to print.");
+    }
+}
+</script>
 
 <!-- Include jQuery (make sure to include this in your HTML head or before your script) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script src="assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
 <script src="assets/plugins/datatable/js/dataTables.bootstrap5.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#print_button').click(function(event) {

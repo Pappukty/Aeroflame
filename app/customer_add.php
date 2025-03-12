@@ -48,7 +48,7 @@ if (isset($_REQUEST['submit'])) {
     */
 
     // Redirect to customer list page after insert/update
-    header("location: customer_list.php");
+    header("location:customer_list.php");
     exit(); // Make sure to stop the script execution here.
 }
 

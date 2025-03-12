@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $mdg = isset($_POST['mdg']) ? 1 : 0;
   $reverse_description = $_POST['reverse_description'];
   $resolution_remarks = $_POST['resolution_remarks'];
-  $status_process = 'pending';
+  $status_process = 'Open';
 
   // Insert Query
   $query = "INSERT INTO resolve (

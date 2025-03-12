@@ -7,18 +7,22 @@ error_reporting(1);
 
 if (isset($_REQUEST['submit'])) {
     // Ensure XSS Cleaner is initialized
-
+    if (!isset($xssClean)) {
+        die("XSS Cleaner not initialized.");
+    }
 
     // Clean input data
-    $name = $xssClean->clean_input($_REQUEST['name']);
+    $username = $xssClean->clean_input($_REQUEST['username']);
     $contact = $xssClean->clean_input($_REQUEST['contact']);
     $address = $xssClean->clean_input($_REQUEST['address']);
     $email = $xssClean->clean_input($_REQUEST['email']);
     $designation = $xssClean->clean_input($_REQUEST['designation']);
-    $password = password_hash($xssClean->clean_input($_REQUEST['password']), PASSWORD_BCRYPT);
+    $password=base64_encode($_REQUEST['password']);	
 
     // Ensure DatabaseCo is initialized
-
+    if (!isset($DatabaseCo)) {
+        die("Database connection not initialized.");
+    }
 
     // Check if it's an update operation
     if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
@@ -31,37 +35,43 @@ if (isset($_REQUEST['submit'])) {
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
         $staff_id = $row['staff_id'];
+        $stmt->close();
 
         // Update existing staff record
-        $stmt = $DatabaseCo->dbLink->prepare("UPDATE staff SET name=?, contact=?, address=?, email=?, designation=?, password=? WHERE id=?");
-        $stmt->bind_param("ssssssi", $name, $contact, $address, $email, $designation, $password, $d_id);
+        $stmt = $DatabaseCo->dbLink->prepare("UPDATE staff SET username=?, contact=?, address=?, email=?, designation=?, password=? WHERE id=?");
+        $stmt->bind_param("ssssssi", $username, $contact, $address, $email, $designation, $password, $d_id);
         $stmt->execute();
+        $stmt->close();
     } else {
-        // Generate a new unique Staff ID starting from TECH002
-        $stmt = $DatabaseCo->dbLink->prepare("SELECT MAX(CAST(SUBSTRING(staff_id, 5, 3) AS UNSIGNED)) AS max_id FROM staff WHERE staff_id LIKE 'TECH%'");
+        // Generate a new unique Staff ID starting from AER001
+        $stmt = $DatabaseCo->dbLink->prepare("SELECT MAX(CAST(SUBSTRING(staff_id, 4, 3) AS UNSIGNED)) AS max_id FROM staff WHERE staff_id LIKE 'AER%'");
         $stmt->execute();
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
+        $stmt->close();
+
         $next_id = ($row['max_id'] !== null) ? $row['max_id'] + 1 : 1;
 
-        // Generate the staff ID
+        // Generate the staff ID (e.g., AER001, AER002, etc.)
         $staff_id = "AER" . str_pad($next_id, 3, '0', STR_PAD_LEFT);
 
         // Insert new staff record
-        $stmt = $DatabaseCo->dbLink->prepare("INSERT INTO staff (staff_id, name, contact, address, email, designation, password) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssss", $staff_id, $name, $contact, $address, $email, $designation, $password);
+        $stmt = $DatabaseCo->dbLink->prepare("INSERT INTO staff (staff_id, username, contact, address, email, designation, password) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssss", $staff_id, $username, $contact, $address, $email, $designation, $password);
         $stmt->execute();
         $d_id = $stmt->insert_id; // Get last inserted ID for image update
+        $stmt->close();
     }
 
     // Handle Image Upload
-    $uploadimage = new ImageUploader($DatabaseCo);
     if (isset($_FILES['photo']) && is_uploaded_file($_FILES['photo']['tmp_name'])) {
+        $uploadimage = new ImageUploader($DatabaseCo);
         $photos = $uploadimage->upload($_FILES['photo'], "staff");
         if ($photos) {
             $stmt = $DatabaseCo->dbLink->prepare("UPDATE staff SET photo=? WHERE id=?");
             $stmt->bind_param("si", $photos, $d_id);
             $stmt->execute();
+            $stmt->close();
         }
     }
 
@@ -69,6 +79,8 @@ if (isset($_REQUEST['submit'])) {
     header("Location: staff.php");
     exit();
 }
+
+
 
 
 
@@ -140,7 +152,7 @@ if (!empty($_REQUEST['id']) && is_numeric($_REQUEST['id'])) {
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Name</label>
-                            <input type="text" class="form-control" name="name" placeholder="Enter Name" value="<?php echo $Row->name ?>" required>
+                            <input type="text" class="form-control" name="username" placeholder="Enter Name" value="<?php echo $Row->username ?>" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Contact Number</label>

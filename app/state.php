@@ -34,7 +34,7 @@ if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
 <div class="page-header">
     <div class="row">
         <div class="col-sm-8">
-            <h3 class="page-title">All Country </h3>
+            <h3 class="page-title">All State </h3>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">Dashboard</a></li>
                 <li class="breadcrumb-item active">Listing of All State </li>
@@ -83,10 +83,10 @@ if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
                                 <th class="w-25">status</th>
 
 
-
+                                <th class="w-25">Action</th>
                                 <!-- <th class="w-25">Status</th> -->
                                 <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                                <th class="w-25">Action</th>
+                               
                                 <!-- <?php } ?> -->
                             </tr>
                         </thead>

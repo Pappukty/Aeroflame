@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
 // Fetch user data
 $user_id = $_SESSION['user_id'];
 
-echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure output
+// echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); 
 ?>
 
 <style>
@@ -49,17 +49,18 @@ echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure ou
                         <thead>
                             <tr>
                                 <th class="w-5">Sno</th>
-                                <th class="w-15">Technician Image</th>
+                                <th class="w-10">T/C Image</th>
                                 <th class="w-15">Employee ID</th>
-                                <th class="w-25">Name</th>
-                                <th class="w-20">Contact</th>
+                                <th class="w-20">Technician <br>
+                                <Details></Details>
+                            </th>
+                              
                                 <!-- <th class="w-25">Email</th> -->
-                                <th class="w-15">Assigned Areas</th>
-                                <!-- <th class="w-15">Type</th> -->
-                                <th class="w-25">Status</th>
-                                <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
+                                <th class="w-10">Assigned Areas</th>
+                                <th class="w-5">Completed Tickets</th>
+                                <th class="w-15">Status</th>
                                 <th class="w-25">Action</th>
-                                <!-- <?php } ?> -->
+                              
                             </tr>
                         </thead>
                         <tbody>
@@ -76,6 +77,10 @@ echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure ou
                                     // Ensure we handle multiple city selections correctly
                                     $cityIds = implode("','", $selectedCities); // Convert array to a string for SQL query
                                     $sql3 = mysqli_query($DatabaseCo->dbLink, "SELECT * FROM cities WHERE id IN ('$cityIds')");
+                                    $sql4 = mysqli_query($DatabaseCo->dbLink, "SELECT * FROM `technician_assignment` WHERE technican_id='" . $Row->employee_id . "'");
+                                    $res4 = mysqli_fetch_object($sql4);
+                                    $sql = mysqli_query($DatabaseCo->dbLink, "SELECT COUNT(*) as total FROM `technician_assignment` WHERE status_process = 'Completed' AND technican_id = '$Row->employee_id'");
+                                    $res = mysqli_fetch_object($sql);
                                     $cityNames = [];
 
                                     while ($res3 = mysqli_fetch_object($sql3)) {
@@ -104,10 +109,8 @@ echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure ou
                                         <td><?php echo htmlspecialchars($Row->employee_id); ?></td>
 
                                         <!-- Technician Name -->
-                                        <td><?php echo htmlspecialchars($Row->technician_name); ?></td>
+                                        <td><?php echo htmlspecialchars($Row->technician_name); ?><br><?php echo htmlspecialchars($Row->contact); ?></td>
 
-                                        <!-- Contact -->
-                                        <td><?php echo htmlspecialchars($Row->contact); ?></td>
 
                                         <!-- Assigned Areas -->
                                         <td>
@@ -116,6 +119,19 @@ echo "User ID: " . htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8'); // Secure ou
                                             echo is_array($assigned_areas) ? implode(', ', $assigned_areas) : htmlspecialchars($mergedCityNames);
                                             ?>
                                         </td>
+                                        <?php
+                                        // Initialize a counter variable
+                                        $completedCount = 0;
+
+                                        // Fetch data from the database
+                                        foreach ($rows as $Row) { // Assuming $rows contains fetched data
+                                            if ($res4->status_process == 'Completed') {
+                                                $completedCount++; // Increment count if status is 'completed'
+                                            }
+                                        }
+                                        ?>
+                                              <td><?php echo htmlspecialchars($res->total); ?></td>
+
 
                                         <!-- Availability Status Button -->
                                         <td>
@@ -317,7 +333,7 @@ include_once './includes/footer.php';
         console.log("Updating ID:", id, "New Status:", newStatus);
 
         $.ajax({
-            url: 'update.php',
+            url: 'update_technician.php',
             type: 'POST',
             data: {
                 status_id: id,

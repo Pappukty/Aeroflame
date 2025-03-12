@@ -64,10 +64,10 @@ if (isset($_POST['delete_now']) && !empty($_POST['del_c'])) {
                                 <th class="w-25">status</th>
                                
 
-
+                                <th class="w-25">Action</th>
                                 <!-- <th class="w-25">Status</th> -->
                                 <!-- <?php if ($_SESSION["user_id"] == 1) { ?> -->
-                                <th class="w-25">Action</th>
+                             
                                 <!-- <?php } ?> -->
                             </tr>
                         </thead>
